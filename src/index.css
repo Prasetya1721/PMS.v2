@@ -1279,16 +1279,16 @@ textarea.form-control {
 }
 
 /* ==========================================================================
-   SISTEM PMS ARMADA NUSANTARA - PORTAL LOGIN STYLES
+   SISTEM PMS ARMADA NUSANTARA - PORTAL LOGIN STYLES (LIGHT MODE)
    ========================================================================== */
 
 .bhk-login-wrapper {
   min-height: 100vh;
   width: 100%;
-  background-color: #030a17;
+  background-color: #f8fafc;
   background-image: 
-    radial-gradient(circle at 80% 15%, rgba(14, 116, 144, 0.2) 0%, transparent 40%),
-    radial-gradient(circle at 20% 85%, rgba(30, 58, 138, 0.28) 0%, transparent 45%);
+    radial-gradient(circle at 85% 15%, rgba(2, 132, 199, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 15% 85%, rgba(37, 99, 235, 0.06) 0%, transparent 45%);
   position: relative;
   display: flex;
   align-items: center;
@@ -1310,7 +1310,7 @@ textarea.form-control {
   right: 15%;
   width: 320px;
   height: 320px;
-  background: rgba(2, 132, 199, 0.15);
+  background: rgba(2, 132, 199, 0.07);
 }
 
 .bhk-glow-bottom-left {
@@ -1318,7 +1318,7 @@ textarea.form-control {
   left: 10%;
   width: 360px;
   height: 360px;
-  background: rgba(30, 64, 175, 0.18);
+  background: rgba(37, 99, 235, 0.06);
 }
 
 .bhk-login-container {
@@ -1349,16 +1349,16 @@ textarea.form-control {
 
 .bhk-pill-badge {
   display: inline-block;
-  background: rgba(23, 37, 84, 0.7);
-  border: 1px solid rgba(59, 130, 246, 0.45);
-  color: #60a5fa;
-  font-size: 0.7rem;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.08em;
-  padding: 0.3rem 0.85rem;
+  padding: 0.35rem 0.9rem;
   border-radius: 9999px;
   margin-bottom: 1.5rem;
-  box-shadow: 0 0 15px rgba(37, 99, 235, 0.15);
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.08);
 }
 
 .bhk-brand-header {
@@ -1373,12 +1373,18 @@ textarea.form-control {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 50px;
+  height: 50px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.05);
 }
 
 .bhk-company-name {
   font-size: 1.35rem;
   font-weight: 800;
-  color: #ffffff;
+  color: #0f172a;
   letter-spacing: -0.01em;
   line-height: 1.25;
   margin: 0;
@@ -1386,24 +1392,23 @@ textarea.form-control {
 
 .bhk-company-desc {
   font-size: 0.875rem;
-  color: #94a3b8;
+  color: #475569;
   line-height: 1.65;
   margin-bottom: 2rem;
   max-width: 480px;
 }
 
 .bhk-contact-card {
-  background: rgba(8, 20, 42, 0.75);
-  border: 1px solid rgba(30, 64, 175, 0.35);
-  backdrop-filter: blur(8px);
-  border-radius: 14px;
-  padding: 1.25rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1.35rem;
   width: 100%;
   max-width: 500px;
   display: flex;
   flex-direction: column;
   gap: 0.875rem;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
 }
 
 .bhk-contact-item {
@@ -1413,20 +1418,20 @@ textarea.form-control {
 }
 
 .bhk-pin-icon {
-  color: #38bdf8;
+  color: #0284c7;
   flex-shrink: 0;
   margin-top: 3px;
 }
 
 .bhk-contact-text {
-  font-size: 0.8rem;
-  color: #cbd5e1;
-  line-height: 1.5;
+  font-size: 0.825rem;
+  color: #475569;
+  line-height: 1.55;
 }
 
 .bhk-contact-label {
   font-weight: 700;
-  color: #ffffff;
+  color: #0f172a;
 }
 
 .bhk-contact-footer-row {
@@ -1434,24 +1439,25 @@ textarea.form-control {
   align-items: center;
   gap: 1.5rem;
   flex-wrap: wrap;
-  padding-top: 0.75rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 0.875rem;
+  border-top: 1px solid #f1f5f9;
 }
 
 .bhk-contact-subitem {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.75rem;
-  color: #94a3b8;
+  font-size: 0.78rem;
+  color: #64748b;
+  font-weight: 500;
 }
 
 .bhk-phone-icon {
-  color: #f43f5e;
+  color: #e11d48;
 }
 
 .bhk-mail-icon {
-  color: #94a3b8;
+  color: #0284c7;
 }
 
 /* RIGHT COLUMN (LOGIN CARD) */
@@ -1462,15 +1468,15 @@ textarea.form-control {
 }
 
 .bhk-login-card {
-  background: #08152c;
-  border: 1px solid rgba(37, 99, 235, 0.28);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 20px;
   padding: 2.25rem 2.25rem 2rem;
   width: 100%;
   max-width: 500px;
   box-shadow: 
-    0 25px 50px -12px rgba(0, 0, 0, 0.8),
-    0 0 0 1px rgba(255, 255, 255, 0.03);
+    0 20px 40px -15px rgba(15, 23, 42, 0.08),
+    0 0 1px 1px rgba(15, 23, 42, 0.04);
   text-align: left;
 }
 
@@ -1481,14 +1487,14 @@ textarea.form-control {
 .bhk-card-title {
   font-size: 1.4rem;
   font-weight: 800;
-  color: #ffffff;
+  color: #0f172a;
   margin-bottom: 0.35rem;
   letter-spacing: -0.01em;
 }
 
 .bhk-card-subtitle {
   font-size: 0.825rem;
-  color: #94a3b8;
+  color: #64748b;
   line-height: 1.4;
 }
 
@@ -1507,7 +1513,7 @@ textarea.form-control {
 .bhk-label {
   font-size: 0.8rem;
   font-weight: 600;
-  color: #e2e8f0;
+  color: #1e293b;
 }
 
 .bhk-input-wrap {
@@ -1526,11 +1532,11 @@ textarea.form-control {
 .bhk-input {
   width: 100%;
   height: 44px;
-  background: #050e1f;
-  border: 1px solid #172a4d;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
   border-radius: 8px;
   padding: 0 2.5rem;
-  color: #ffffff;
+  color: #0f172a;
   font-family: inherit;
   font-size: 0.875rem;
   outline: none;
@@ -1539,8 +1545,8 @@ textarea.form-control {
 
 .bhk-input:focus {
   border-color: #0284c7;
-  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.25);
-  background: #061126;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+  background: #ffffff;
 }
 
 .bhk-toggle-eye {
@@ -1557,14 +1563,14 @@ textarea.form-control {
 }
 
 .bhk-toggle-eye:hover {
-  color: #94a3b8;
+  color: #0f172a;
 }
 
 .bhk-meta-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   padding: 0.15rem 0;
 }
 
@@ -1572,7 +1578,7 @@ textarea.form-control {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #cbd5e1;
+  color: #475569;
   cursor: pointer;
   user-select: none;
 }
@@ -1585,20 +1591,19 @@ textarea.form-control {
 }
 
 .bhk-demo-hint {
-  color: #38bdf8;
+  color: #0284c7;
   font-weight: 500;
 }
 
 .bhk-demo-hint strong {
   font-weight: 700;
-  color: #7dd3fc;
+  color: #0369a1;
 }
 
 .bhk-submit-btn {
   width: 100%;
   height: 46px;
-  background: #0284c7;
-  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  background: linear-gradient(135deg, #0284c7 0%, #1d4ed8 100%);
   border: none;
   border-radius: 8px;
   color: #ffffff;
@@ -1610,14 +1615,14 @@ textarea.form-control {
   justify-content: center;
   gap: 0.5rem;
   cursor: pointer;
-  box-shadow: 0 4px 18px rgba(2, 132, 199, 0.45);
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
   transition: all 0.2s ease;
   margin-top: 0.35rem;
 }
 
 .bhk-submit-btn:hover {
-  background: linear-gradient(135deg, #0369a1 0%, #0284c7 100%);
-  box-shadow: 0 6px 24px rgba(2, 132, 199, 0.6);
+  background: linear-gradient(135deg, #0369a1 0%, #1e40af 100%);
+  box-shadow: 0 6px 20px rgba(2, 132, 199, 0.45);
   transform: translateY(-1px);
 }
 
@@ -1625,7 +1630,7 @@ textarea.form-control {
 .bhk-quick-section {
   margin-top: 1.75rem;
   padding-top: 1.25rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid #f1f5f9;
 }
 
 .bhk-quick-header {
@@ -1639,17 +1644,17 @@ textarea.form-control {
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  color: #38bdf8;
+  color: #0284c7;
   font-weight: 700;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
 }
 
 .bhk-zap-icon {
-  color: #38bdf8;
+  color: #0284c7;
 }
 
 .bhk-quick-tag {
-  color: #64748b;
+  color: #94a3b8;
   font-size: 0.72rem;
 }
 
@@ -1660,10 +1665,10 @@ textarea.form-control {
 }
 
 .bhk-account-btn {
-  background: #050f21;
-  border: 1px solid #142749;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
-  padding: 0.6rem 0.75rem;
+  padding: 0.65rem 0.85rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1674,10 +1679,10 @@ textarea.form-control {
 }
 
 .bhk-account-btn:hover {
-  background: #081836;
-  border-color: #0284c7;
+  background: #f0f9ff;
+  border-color: #bae6fd;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 10px rgba(2, 132, 199, 0.08);
 }
 
 .bhk-account-info {
@@ -1686,18 +1691,18 @@ textarea.form-control {
 }
 
 .bhk-account-name {
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 700;
-  color: #f1f5f9;
+  color: #0f172a;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .bhk-account-role {
-  font-size: 0.68rem;
-  color: #38bdf8;
-  font-weight: 500;
+  font-size: 0.7rem;
+  color: #0284c7;
+  font-weight: 600;
   margin-top: 2px;
   white-space: nowrap;
   overflow: hidden;
@@ -1705,13 +1710,13 @@ textarea.form-control {
 }
 
 .bhk-chevron {
-  color: #475569;
+  color: #94a3b8;
   flex-shrink: 0;
   margin-left: 0.25rem;
 }
 
 .bhk-account-btn:hover .bhk-chevron {
-  color: #38bdf8;
+  color: #0284c7;
   transform: translateX(2px);
 }
 
