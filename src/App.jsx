@@ -18,7 +18,8 @@ import NotificationHistory from './components/notification/NotificationHistory';
 import GoogleCalendarModule from './components/calendar/GoogleCalendarModule';
 import ProfileSettingsModal from './components/profile/ProfileSettingsModal';
 import LoginPage from './components/auth/LoginPage';
-import { Info, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Info, CheckCircle2, AlertTriangle, Heart } from 'lucide-react';
+import logoAt from './assets/logo-at.png';
 
 export default function App() {
   const { activeTab, toast, isAuthenticated } = useApp();
@@ -91,6 +92,25 @@ export default function App() {
         <main className="content-viewport">
           {renderContent()}
         </main>
+        {/* Main Application Footer */}
+        <footer className="app-main-footer">
+          <div className="app-footer-content">
+            <div className="app-footer-left">
+              <img src={logoAt} alt="AT Logo" className="app-footer-logo" />
+              <div className="app-footer-text">
+                <span className="app-footer-credit">
+                  Dibuat dengan <Heart size={13} className="bhk-heart-icon" fill="#ef4444" color="#ef4444" /> oleh <strong className="bhk-author-name">Pras</strong>
+                </span>
+                <span className="app-footer-compliance">
+                  © 2026 Sistem PMS Armada Nusantara • ISM Code & Biro Klasifikasi Indonesia (BKI) Compliant
+                </span>
+              </div>
+            </div>
+            <div className="app-footer-right">
+              <span className="app-footer-badge">Sistem PMS Armada v2.4</span>
+            </div>
+          </div>
+        </footer>
       </div>
 
       {/* Profile Settings Modal */}

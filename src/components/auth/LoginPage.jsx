@@ -8,8 +8,10 @@ import {
   Zap,
   MapPin,
   Phone,
-  ChevronRight
+  ChevronRight,
+  Heart
 } from 'lucide-react';
+import logoAt from '../../assets/logo-at.png';
 import { useApp } from '../../context/AppContext';
 
 export default function LoginPage() {
@@ -206,7 +208,15 @@ export default function LoginPage() {
 
         {/* Bottom System Disclaimer & Compliance Footer */}
         <footer className="bhk-page-footer">
-          © 2026 Sistem PMS Armada Nusantara • ISM Code & Biro Klasifikasi Indonesia (BKI) Compliant
+          <div className="bhk-footer-logo-wrap">
+            <img src={logoAt} alt="AT Logo" className="bhk-footer-logo" />
+          </div>
+          <div className="bhk-footer-credit">
+            Dibuat dengan <Heart size={14} className="bhk-heart-icon" fill="#ef4444" color="#ef4444" /> oleh <span className="bhk-author-name">Pras</span>
+          </div>
+          <div className="bhk-footer-compliance">
+            © 2026 Sistem PMS Armada Nusantara • ISM Code & Biro Klasifikasi Indonesia (BKI) Compliant
+          </div>
         </footer>
       </div>
     </div>

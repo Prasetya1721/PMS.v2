@@ -1720,12 +1720,130 @@ textarea.form-control {
   transform: translateX(2px);
 }
 
-/* Page Footer */
+/* Page Footer (Login Portal) */
 .bhk-page-footer {
-  margin-top: 3.5rem;
-  font-size: 0.75rem;
-  color: #64748b;
+  margin-top: 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
   text-align: center;
+}
+
+.bhk-footer-logo-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bhk-footer-logo {
+  height: 44px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 10px rgba(15, 23, 42, 0.08));
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.bhk-footer-logo:hover {
+  transform: scale(1.08);
+  filter: drop-shadow(0 6px 14px rgba(2, 132, 199, 0.25));
+}
+
+.bhk-footer-credit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #334155;
+  letter-spacing: -0.01em;
+}
+
+.bhk-heart-icon {
+  display: inline-block;
+  vertical-align: middle;
+  animation: heartPulse 1.8s infinite ease-in-out;
+}
+
+@keyframes heartPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.25);
+  }
+}
+
+.bhk-author-name {
+  color: #0284c7;
+  font-weight: 700;
+}
+
+.bhk-footer-compliance {
+  font-size: 0.74rem;
+  color: #64748b;
+}
+
+/* App Main Footer (Logged In Dashboard Layout) */
+.app-main-footer {
+  border-top: 1px solid var(--border-default);
+  background: var(--bg-surface);
+  padding: 1rem 2rem;
+  margin-top: auto;
+}
+
+.app-footer-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.app-footer-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.app-footer-logo {
+  height: 32px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(15, 23, 42, 0.06));
+}
+
+.app-footer-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.app-footer-credit {
+  font-size: 0.825rem;
+  font-weight: 600;
+  color: var(--brand-navy-900);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.app-footer-compliance {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.app-footer-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--brand-primary);
+  background: rgba(2, 132, 199, 0.08);
+  border: 1px solid rgba(2, 132, 199, 0.2);
+  border-radius: 9999px;
+  padding: 0.25rem 0.75rem;
 }
 
 /* Responsive adjustments for Tablets and Mobile */
