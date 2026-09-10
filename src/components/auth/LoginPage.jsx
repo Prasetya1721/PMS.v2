@@ -1,28 +1,22 @@
 import React, { useState } from 'react';
 import {
-  Anchor,
-  Lock,
   Mail,
+  Lock,
   Eye,
   EyeOff,
-  LogIn,
-  ShieldCheck,
-  CheckCircle2,
-  Ship,
-  Wrench,
-  Users,
-  WalletCards,
-  Award,
-  ArrowRight
+  ArrowRight,
+  Zap,
+  MapPin,
+  Phone,
+  ChevronRight
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
-import Badge from '../common/Badge';
 
 export default function LoginPage() {
   const { login, DEMO_ACCOUNTS } = useApp();
 
-  const [email, setEmail] = useState('admin@maritim.com');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState('admin@baharimas.co.id');
+  const [password, setPassword] = useState('123');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
 
@@ -37,160 +31,183 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="login-page-container">
-      {/* Background Subtle Gradient */}
-      <div className="login-bg-decor" />
+    <div className="bhk-login-wrapper">
+      {/* Background Ambient Glows */}
+      <div className="bhk-ambient-glow bhk-glow-top-right" />
+      <div className="bhk-ambient-glow bhk-glow-bottom-left" />
 
-      <div className="login-card-wrapper">
-        {/* Top Branding Header */}
-        <div className="login-brand-header">
-          <div className="login-brand-logo">
-            <Anchor size={32} />
-          </div>
-          <div className="login-brand-text">
-            <h1 className="login-brand-title">PMS MARITIM</h1>
-            <p className="login-brand-subtitle">Integrated Planned Maintenance & Fleet Operations</p>
-          </div>
-        </div>
+      <div className="bhk-login-container">
+        <div className="bhk-login-columns">
+          {/* ================= LEFT COLUMN: Corporate Info ================= */}
+          <div className="bhk-left-col">
+            {/* Pill Badge */}
+            <div className="bhk-pill-badge">
+              MARITIME FLEET MANAGEMENT SYSTEM
+            </div>
 
-        <div className="login-main-card">
-          {/* Welcome Message */}
-          <div className="login-welcome-box">
-            <h2 className="login-heading">Portal Masuk Sistem</h2>
-            <p className="login-subheading">
-              Gunakan kredensial akun maritim Anda untuk mengakses monitoring kapal dan armada terpadu.
+            {/* Company Logo & Brand Name */}
+            <div className="bhk-brand-header">
+              {/* Geometric Maritime Boat Emblem (Green sail, Blue & Yellow Hull) */}
+              <div className="bhk-logo-icon">
+                <svg width="42" height="42" viewBox="0 0 48 48" fill="none">
+                  {/* Top Sail: Green Triangle */}
+                  <polygon points="24,5 41,23 7,23" fill="#16a34a" />
+                  {/* Upper Hull: Ocean Blue */}
+                  <path d="M7,25 H41 C40,33 34,36 24,36 C14,36 8,33 7,25 Z" fill="#0284c7" />
+                  {/* Lower Curved Keel: Golden Yellow */}
+                  <path d="M8,32 C12,42 17,44 24,44 C31,44 36,42 40,32 C34,41 14,41 8,32 Z" fill="#eab308" />
+                </svg>
+              </div>
+              <h1 className="bhk-company-name">
+                PT PELAYARAN BAHARIMAS KALIMANTAN
+              </h1>
+            </div>
+
+            {/* Description */}
+            <p className="bhk-company-desc">
+              Pusat sistem digital operasional armada kapal tunda (tugboat), tongkang, dan kapal kargo niaga perairan Kalimantan Barat dan jalur pelayaran Nusantara.
             </p>
-          </div>
 
-          {/* Standard Login Form */}
-          <form className="login-form" onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label className="form-label" htmlFor="login-email">
-                Alamat Email / NIP Pelaut
-              </label>
-              <div className="login-input-wrap">
-                <Mail size={17} className="login-input-icon" />
-                <input
-                  id="login-email"
-                  type="email"
-                  className="form-control login-input"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="nama@maritim.com"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="form-group">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <label className="form-label" htmlFor="login-password">
-                  Kata Sandi Sistem
-                </label>
-                <a
-                  href="#forgot"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    alert('Untuk presentasi demo, Anda dapat langsung mengklik salah satu akun demo di bawah.');
-                  }}
-                  className="login-forgot-link"
-                >
-                  Lupa Sandi?
-                </a>
-              </div>
-              <div className="login-input-wrap">
-                <Lock size={17} className="login-input-icon" />
-                <input
-                  id="login-password"
-                  type={showPassword ? 'text' : 'password'}
-                  className="form-control login-input"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                />
-                <button
-                  type="button"
-                  className="login-toggle-pwd"
-                  onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? 'Sembunyikan sandi' : 'Tampilkan sandi'}
-                >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-            </div>
-
-            <div className="login-options-row">
-              <label className="login-remember-label">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  style={{ accentColor: '#0284c7' }}
-                />
-                <span>Ingat akun saya di perangkat ini</span>
-              </label>
-            </div>
-
-            <button type="submit" className="btn btn-primary login-submit-btn">
-              <LogIn size={18} />
-              <span>Masuk ke Sistem PMS</span>
-            </button>
-          </form>
-
-          {/* Divider */}
-          <div className="login-divider">
-            <span>PILIH ROLE DEMO CEPAT (1-KLIK UNTUK PRESENTASI)</span>
-          </div>
-
-          {/* Quick Demo Role Selector */}
-          <div className="demo-accounts-grid">
-            {DEMO_ACCOUNTS.map((account) => (
-              <button
-                key={account.id}
-                type="button"
-                className="demo-account-card"
-                onClick={() => handleQuickLogin(account)}
-                title={`Klik untuk langsung masuk sebagai ${account.role}`}
-              >
-                <div className="demo-avatar-circle">
-                  {account.avatarInitials}
+            {/* Head Office Address & Contact Card */}
+            <div className="bhk-contact-card">
+              <div className="bhk-contact-item">
+                <MapPin size={18} className="bhk-pin-icon" />
+                <div className="bhk-contact-text">
+                  <span className="bhk-contact-label">Alamat Kantor Pusat:</span>{' '}
+                  Jl. Adi Sucipto KM 6, Kompleks Bahari Permai No. 2, RT. 004 / RW. 004, Desa Sungai Raya, Kec. Sungai Raya, Kab. Kubu Raya - Pontianak, Kalimantan Barat
                 </div>
-                <div className="demo-account-details">
-                  <div className="demo-account-name-row">
-                    <span className="demo-account-name">{account.name}</span>
-                    <Badge variant={account.badgeVariant}>
-                      {account.role.split('/')[0].trim()}
-                    </Badge>
+              </div>
+
+              <div className="bhk-contact-footer-row">
+                <div className="bhk-contact-subitem">
+                  <Phone size={14} className="bhk-phone-icon" />
+                  <span>Telp: (0561) 531016 / 732194</span>
+                </div>
+                <div className="bhk-contact-subitem">
+                  <Mail size={14} className="bhk-mail-icon" />
+                  <span>pt.baharimas@hotmail.com</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ================= RIGHT COLUMN: Login Card ================= */}
+          <div className="bhk-right-col">
+            <div className="bhk-login-card">
+              {/* Card Header */}
+              <div className="bhk-card-header">
+                <h2 className="bhk-card-title">Masuk ke Portal PMS</h2>
+                <p className="bhk-card-subtitle">
+                  Gunakan akun korporat PT. Pelayaran Baharimas Kalimantan
+                </p>
+              </div>
+
+              {/* Form */}
+              <form onSubmit={handleSubmit} className="bhk-form">
+                <div className="bhk-form-group">
+                  <label className="bhk-label" htmlFor="bhk-email">
+                    Email / Akun Korporat
+                  </label>
+                  <div className="bhk-input-wrap">
+                    <Mail size={16} className="bhk-input-icon" />
+                    <input
+                      id="bhk-email"
+                      type="email"
+                      className="bhk-input"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="admin@baharimas.co.id"
+                      required
+                    />
                   </div>
-                  <div className="demo-account-desc">{account.description}</div>
                 </div>
-                <div className="demo-login-action">
-                  <span>Pilih</span>
-                  <ArrowRight size={13} />
-                </div>
-              </button>
-            ))}
-          </div>
 
-          {/* Security Compliance Guarantee */}
-          <div className="login-security-footer">
-            <div className="security-item">
-              <ShieldCheck size={16} color="#059669" />
-              <span>Enkripsi TLS 256-Bit</span>
-            </div>
-            <span className="security-dot">•</span>
-            <div className="security-item">
-              <CheckCircle2 size={16} color="#0284c7" />
-              <span>Standar ISM Code & ISO 27001</span>
+                <div className="bhk-form-group">
+                  <label className="bhk-label" htmlFor="bhk-password">
+                    Kata Sandi
+                  </label>
+                  <div className="bhk-input-wrap">
+                    <Lock size={16} className="bhk-input-icon" />
+                    <input
+                      id="bhk-password"
+                      type={showPassword ? 'text' : 'password'}
+                      className="bhk-input"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="•••"
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="bhk-toggle-eye"
+                      onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? 'Sembunyikan sandi' : 'Lihat sandi'}
+                    >
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Remember & Default Credential Hint */}
+                <div className="bhk-meta-row">
+                  <label className="bhk-remember-label">
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="bhk-checkbox"
+                    />
+                    <span>Ingat sesi saya</span>
+                  </label>
+                  <span className="bhk-demo-hint">
+                    Default Sandi Demo: <strong>123</strong>
+                  </span>
+                </div>
+
+                {/* Submit Button */}
+                <button type="submit" className="bhk-submit-btn">
+                  <span>Masuk ke Sistem PMS</span>
+                  <ArrowRight size={17} />
+                </button>
+              </form>
+
+              {/* Quick Demo Access Section */}
+              <div className="bhk-quick-section">
+                <div className="bhk-quick-header">
+                  <div className="bhk-quick-title">
+                    <Zap size={14} className="bhk-zap-icon" />
+                    <span>Akses Cepat Demo (Klik Akun):</span>
+                  </div>
+                  <span className="bhk-quick-tag">1-Click Role Access</span>
+                </div>
+
+                {/* 2-Column Grid for Demo Accounts */}
+                <div className="bhk-quick-grid">
+                  {DEMO_ACCOUNTS.map((account) => (
+                    <button
+                      key={account.id}
+                      type="button"
+                      className="bhk-account-btn"
+                      onClick={() => handleQuickLogin(account)}
+                      title={`Masuk sebagai ${account.role} (${account.name})`}
+                    >
+                      <div className="bhk-account-info">
+                        <div className="bhk-account-name">{account.name}</div>
+                        <div className="bhk-account-role">{account.role}</div>
+                      </div>
+                      <ChevronRight size={14} className="bhk-chevron" />
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* System copyright */}
-        <div className="login-footer-copy">
-          © 2026 PT Pelayaran Samudera Armada • Sistem PMS v2.4 Enterprise Edition
-        </div>
+        {/* Bottom System Disclaimer & Compliance Footer */}
+        <footer className="bhk-page-footer">
+          © 2026 PT. Pelayaran Baharimas Kalimantan • ISM Code & Biro Klasifikasi Indonesia (BKI) Compliant
+        </footer>
       </div>
     </div>
   );

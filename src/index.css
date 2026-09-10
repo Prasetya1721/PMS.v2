@@ -1279,355 +1279,489 @@ textarea.form-control {
 }
 
 /* ==========================================================================
-   LOGIN PAGE STYLES (MARITIME ENTERPRISE THEME)
+   PT PELAYARAN BAHARIMAS KALIMANTAN - PORTAL LOGIN STYLES
    ========================================================================== */
 
-.login-page-container {
+.bhk-login-wrapper {
   min-height: 100vh;
   width: 100%;
+  background-color: #030a17;
+  background-image: 
+    radial-gradient(circle at 80% 15%, rgba(14, 116, 144, 0.2) 0%, transparent 40%),
+    radial-gradient(circle at 20% 85%, rgba(30, 58, 138, 0.28) 0%, transparent 45%);
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 3rem 1.25rem;
-  background-color: #f1f5f9;
-  position: relative;
+  padding: 3rem 1.5rem;
   overflow-x: hidden;
 }
 
-.login-bg-decor {
+.bhk-ambient-glow {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 380px;
-  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 55%, #0284c7 100%);
-  z-index: 0;
-  clip-path: polygon(0 0, 100% 0, 100% 75%, 0 100%);
+  pointer-events: none;
+  border-radius: 50%;
+  filter: blur(80px);
+  z-index: 1;
 }
 
-.login-card-wrapper {
+.bhk-glow-top-right {
+  top: 5%;
+  right: 15%;
+  width: 320px;
+  height: 320px;
+  background: rgba(2, 132, 199, 0.15);
+}
+
+.bhk-glow-bottom-left {
+  bottom: 5%;
+  left: 10%;
+  width: 360px;
+  height: 360px;
+  background: rgba(30, 64, 175, 0.18);
+}
+
+.bhk-login-container {
   position: relative;
   z-index: 10;
   width: 100%;
-  max-width: 580px;
+  max-width: 1140px;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-.login-brand-header {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.75rem;
-  color: #ffffff;
+.bhk-login-columns {
   width: 100%;
-}
-
-.login-brand-logo {
-  width: 54px;
-  height: 54px;
-  border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  display: flex;
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: 3.5rem;
   align-items: center;
-  justify-content: center;
-  color: #ffffff;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-  flex-shrink: 0;
 }
 
-.login-brand-title {
-  font-size: 1.45rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: #ffffff;
-  margin: 0;
-  line-height: 1.2;
-}
-
-.login-brand-subtitle {
-  font-size: 0.8rem;
-  color: #bae6fd;
-  margin: 0;
-  font-weight: 500;
-}
-
-.login-main-card {
-  width: 100%;
-  background: #ffffff;
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--border-default);
-  box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.12), 0 0 1px 1px rgba(15, 23, 42, 0.05);
-  padding: 2.25rem 2.25rem 2rem;
-  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.login-welcome-box {
-  margin-bottom: 1.5rem;
+/* LEFT COLUMN */
+.bhk-left-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   text-align: left;
 }
 
-.login-heading {
-  font-size: 1.3rem;
-  font-weight: 800;
-  color: var(--brand-navy-900);
-  margin-bottom: 0.35rem;
+.bhk-pill-badge {
+  display: inline-block;
+  background: rgba(23, 37, 84, 0.7);
+  border: 1px solid rgba(59, 130, 246, 0.45);
+  color: #60a5fa;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 0.3rem 0.85rem;
+  border-radius: 9999px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 0 15px rgba(37, 99, 235, 0.15);
 }
 
-.login-subheading {
-  font-size: 0.85rem;
-  color: var(--text-muted);
+.bhk-brand-header {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  margin-bottom: 1.25rem;
+}
+
+.bhk-logo-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bhk-company-name {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  margin: 0;
+}
+
+.bhk-company-desc {
+  font-size: 0.875rem;
+  color: #94a3b8;
+  line-height: 1.65;
+  margin-bottom: 2rem;
+  max-width: 480px;
+}
+
+.bhk-contact-card {
+  background: rgba(8, 20, 42, 0.75);
+  border: 1px solid rgba(30, 64, 175, 0.35);
+  backdrop-filter: blur(8px);
+  border-radius: 14px;
+  padding: 1.25rem;
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+.bhk-contact-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.bhk-pin-icon {
+  color: #38bdf8;
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+.bhk-contact-text {
+  font-size: 0.8rem;
+  color: #cbd5e1;
+  line-height: 1.5;
+}
+
+.bhk-contact-label {
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.bhk-contact-footer-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.bhk-contact-subitem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.bhk-phone-icon {
+  color: #f43f5e;
+}
+
+.bhk-mail-icon {
+  color: #94a3b8;
+}
+
+/* RIGHT COLUMN (LOGIN CARD) */
+.bhk-right-col {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.bhk-login-card {
+  background: #08152c;
+  border: 1px solid rgba(37, 99, 235, 0.28);
+  border-radius: 20px;
+  padding: 2.25rem 2.25rem 2rem;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.8),
+    0 0 0 1px rgba(255, 255, 255, 0.03);
+  text-align: left;
+}
+
+.bhk-card-header {
+  margin-bottom: 1.5rem;
+}
+
+.bhk-card-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 0.35rem;
+  letter-spacing: -0.01em;
+}
+
+.bhk-card-subtitle {
+  font-size: 0.825rem;
+  color: #94a3b8;
   line-height: 1.4;
 }
 
-.login-form {
+.bhk-form {
   display: flex;
   flex-direction: column;
   gap: 1.15rem;
 }
 
-.login-input-wrap {
+.bhk-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.bhk-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.bhk-input-wrap {
   position: relative;
   display: flex;
   align-items: center;
 }
 
-.login-input-icon {
+.bhk-input-icon {
   position: absolute;
   left: 0.875rem;
-  color: var(--text-muted);
+  color: #64748b;
   pointer-events: none;
 }
 
-.login-input {
-  padding-left: 2.6rem !important;
+.bhk-input {
+  width: 100%;
   height: 44px;
+  background: #050e1f;
+  border: 1px solid #172a4d;
+  border-radius: 8px;
+  padding: 0 2.5rem;
+  color: #ffffff;
+  font-family: inherit;
   font-size: 0.875rem;
+  outline: none;
+  transition: all 0.15s ease;
 }
 
-.login-toggle-pwd {
+.bhk-input:focus {
+  border-color: #0284c7;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.25);
+  background: #061126;
+}
+
+.bhk-toggle-eye {
   position: absolute;
   right: 0.75rem;
   background: none;
   border: none;
-  color: var(--text-muted);
+  color: #64748b;
   cursor: pointer;
   display: flex;
   align-items: center;
   padding: 4px;
-  border-radius: 4px;
   transition: color 0.15s ease;
 }
 
-.login-toggle-pwd:hover {
-  color: var(--brand-navy-900);
+.bhk-toggle-eye:hover {
+  color: #94a3b8;
 }
 
-.login-forgot-link {
-  font-size: 0.75rem;
-  color: var(--brand-ocean-600);
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.login-forgot-link:hover {
-  text-decoration: underline;
-}
-
-.login-options-row {
+.bhk-meta-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.825rem;
-  color: var(--text-secondary);
+  font-size: 0.78rem;
+  padding: 0.15rem 0;
 }
 
-.login-remember-label {
+.bhk-remember-label {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  color: #cbd5e1;
   cursor: pointer;
   user-select: none;
 }
 
-.login-submit-btn {
+.bhk-checkbox {
+  accent-color: #0284c7;
+  cursor: pointer;
+  width: 15px;
+  height: 15px;
+}
+
+.bhk-demo-hint {
+  color: #38bdf8;
+  font-weight: 500;
+}
+
+.bhk-demo-hint strong {
+  font-weight: 700;
+  color: #7dd3fc;
+}
+
+.bhk-submit-btn {
   width: 100%;
   height: 46px;
+  background: #0284c7;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  font-family: inherit;
   font-size: 0.95rem;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.6rem;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
-  margin-top: 0.25rem;
+  gap: 0.5rem;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(2, 132, 199, 0.45);
+  transition: all 0.2s ease;
+  margin-top: 0.35rem;
 }
 
-.login-divider {
-  position: relative;
-  text-align: center;
-  margin: 1.75rem 0 1.25rem;
+.bhk-submit-btn:hover {
+  background: linear-gradient(135deg, #0369a1 0%, #0284c7 100%);
+  box-shadow: 0 6px 24px rgba(2, 132, 199, 0.6);
+  transform: translateY(-1px);
+}
+
+/* Quick Demo Section */
+.bhk-quick-section {
+  margin-top: 1.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.bhk-quick-header {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  margin-bottom: 0.875rem;
 }
 
-.login-divider::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  height: 1px;
-  background: var(--border-default);
-  z-index: 1;
-}
-
-.login-divider span {
-  font-size: 0.68rem;
+.bhk-quick-title {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #38bdf8;
   font-weight: 700;
-  letter-spacing: 0.05em;
-  color: var(--text-muted);
-  background: #ffffff;
-  padding: 0 0.875rem;
-  position: relative;
-  z-index: 2;
+  font-size: 0.78rem;
 }
 
-.demo-accounts-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 0.625rem;
+.bhk-zap-icon {
+  color: #38bdf8;
 }
 
-.demo-account-card {
+.bhk-quick-tag {
+  color: #64748b;
+  font-size: 0.72rem;
+}
+
+.bhk-quick-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+.bhk-account-btn {
+  background: #050f21;
+  border: 1px solid #142749;
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
   display: flex;
   align-items: center;
-  gap: 0.875rem;
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-md);
-  background: #f8fafc;
+  justify-content: space-between;
   cursor: pointer;
   text-align: left;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   width: 100%;
 }
 
-.demo-account-card:hover {
-  background: #f0f9ff;
-  border-color: #bae6fd;
+.bhk-account-btn:hover {
+  background: #081836;
+  border-color: #0284c7;
   transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.demo-avatar-circle {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #0284c7 0%, #1e40af 100%);
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  font-size: 0.825rem;
-  flex-shrink: 0;
-  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.2);
-}
-
-.demo-account-details {
+.bhk-account-info {
   flex: 1;
   min-width: 0;
 }
 
-.demo-account-name-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  margin-bottom: 0.15rem;
-}
-
-.demo-account-name {
-  font-size: 0.85rem;
+.bhk-account-name {
+  font-size: 0.78rem;
   font-weight: 700;
-  color: var(--brand-navy-900);
-}
-
-.demo-account-desc {
-  font-size: 0.725rem;
-  color: var(--text-muted);
+  color: #f1f5f9;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.demo-login-action {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--brand-ocean-600);
+.bhk-account-role {
+  font-size: 0.68rem;
+  color: #38bdf8;
+  font-weight: 500;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bhk-chevron {
+  color: #475569;
   flex-shrink: 0;
-  padding: 0.25rem 0.5rem;
-  border-radius: var(--radius-sm);
-  background: #ffffff;
-  border: 1px solid var(--border-default);
+  margin-left: 0.25rem;
 }
 
-.demo-account-card:hover .demo-login-action {
-  background: var(--brand-ocean-600);
-  color: #ffffff;
-  border-color: var(--brand-ocean-600);
+.bhk-account-btn:hover .bhk-chevron {
+  color: #38bdf8;
+  transform: translateX(2px);
 }
 
-.login-security-footer {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.875rem;
-  margin-top: 1.5rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid var(--border-default);
+/* Page Footer */
+.bhk-page-footer {
+  margin-top: 3.5rem;
   font-size: 0.75rem;
-  color: var(--text-muted);
-  flex-wrap: wrap;
-}
-
-.security-item {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.security-dot {
-  color: var(--border-strong);
-}
-
-.login-footer-copy {
-  margin-top: 1.5rem;
-  font-size: 0.75rem;
-  color: var(--text-muted);
+  color: #64748b;
   text-align: center;
 }
 
-@media (max-width: 640px) {
-  .login-main-card {
+/* Responsive adjustments for Tablets and Mobile */
+@media (max-width: 960px) {
+  .bhk-login-columns {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+
+  .bhk-left-col {
+    align-items: center;
+    text-align: center;
+  }
+
+  .bhk-company-desc {
+    text-align: center;
+  }
+
+  .bhk-brand-header {
+    justify-content: center;
+  }
+
+  .bhk-contact-card {
+    text-align: left;
+  }
+}
+
+@media (max-width: 580px) {
+  .bhk-login-wrapper {
+    padding: 2rem 1rem;
+  }
+
+  .bhk-login-card {
     padding: 1.5rem 1.25rem;
   }
 
-  .login-brand-header {
-    flex-direction: column;
-    text-align: center;
-    gap: 0.5rem;
+  .bhk-company-name {
+    font-size: 1.15rem;
   }
 
-  .demo-account-desc {
-    display: none;
+  .bhk-quick-grid {
+    grid-template-columns: 1fr;
   }
 }

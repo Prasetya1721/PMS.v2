@@ -17,69 +17,74 @@ import {
 
 export const DEMO_ACCOUNTS = [
   {
-    id: 'user-admin',
-    name: 'Capt. Bambang Prasetyo, M.Mar',
-    email: 'admin@maritim.com',
-    role: 'Super Admin & Port Capt.',
+    id: 'user-robert',
+    name: 'Capt. Robert Sitorus',
+    role: 'Super Admin',
+    email: 'admin@baharimas.co.id',
     phone: '+6281298765432',
     assignedFleet: 'all',
-    avatarInitials: 'BP',
-    badgeVariant: 'purple',
-    description: 'Akses penuh seluruh armada, persetujuan teknis, dan audit sistem'
+    avatarInitials: 'RS',
+    badgeVariant: 'purple'
   },
   {
-    id: 'user-master',
-    name: 'Capt. Bambang Wijaya, M.Mar',
-    email: 'master@maritim.com',
-    role: 'Nakhoda / Master Kapal',
+    id: 'user-gunawan',
+    name: 'Ir. H. Gunawan',
+    role: 'Fleet Manager',
+    email: 'fleet.mgr@baharimas.co.id',
+    phone: '+628123456789',
+    assignedFleet: 'all',
+    avatarInitials: 'HG',
+    badgeVariant: 'primary'
+  },
+  {
+    id: 'user-hendra',
+    name: 'Capt. Hendra Gunawan',
+    role: 'Admin Kapal / Nakhoda',
+    email: 'master@baharimas.co.id',
     phone: '+628112345678',
     assignedFleet: 'ship-1',
-    avatarInitials: 'BW',
-    badgeVariant: 'primary',
-    description: 'Persetujuan kasbon kapal, checklist keselamatan, dan voyage report'
+    avatarInitials: 'HG',
+    badgeVariant: 'primary'
   },
   {
-    id: 'user-chief',
-    name: 'Agus Setiawan, ATT-II',
-    email: 'chief.eng@maritim.com',
-    role: 'Chief Engineer / C/E',
+    id: 'user-bambang',
+    name: 'Ir. Bambang Wijaya (KKM)',
+    role: 'Teknisi / Chief Engineer',
+    email: 'chief.eng@baharimas.co.id',
     phone: '+628134567890',
     assignedFleet: 'ship-1',
-    avatarInitials: 'AS',
-    badgeVariant: 'warning',
-    description: 'Pencatatan jam kerja mesin, penyelesaian Work Order & sparepart'
+    avatarInitials: 'BW',
+    badgeVariant: 'warning'
   },
   {
-    id: 'user-finance',
-    name: 'Siti Rahmawati, S.E.',
-    email: 'finance@maritim.com',
-    role: 'Finance & Accounting',
+    id: 'user-suryadi',
+    name: 'Suryadi Pratama',
+    role: 'Crew / ABK',
+    email: 'crew@baharimas.co.id',
+    phone: '+628198765432',
+    assignedFleet: 'ship-1',
+    avatarInitials: 'SP',
+    badgeVariant: 'info'
+  },
+  {
+    id: 'user-siti',
+    name: 'Siti Rahmawati',
+    role: 'HR / Personalia',
+    email: 'hr@baharimas.co.id',
     phone: '+628156789012',
     assignedFleet: 'all',
     avatarInitials: 'SR',
-    badgeVariant: 'success',
-    description: 'Verifikasi & pencairan kasbon crew, budgeting armada & rekap biaya'
-  },
-  {
-    id: 'user-crewing',
-    name: 'Dedi Kurniawan, S.Psi',
-    email: 'crewing@maritim.com',
-    role: 'Personalia & Crewing HR',
-    phone: '+628198765432',
-    assignedFleet: 'all',
-    avatarInitials: 'DK',
-    badgeVariant: 'info',
-    description: 'Monitoring masa berlaku sertifikat pelaut STCW, absensi & cuti'
+    badgeVariant: 'success'
   }
 ];
 
 export const INITIAL_USER_PROFILE = {
-  name: 'Capt. Bambang Prasetyo, M.Mar',
-  email: 'admin@maritim.com',
-  role: 'Super Admin & Port Capt.',
+  name: 'Capt. Robert Sitorus',
+  email: 'admin@baharimas.co.id',
+  role: 'Super Admin',
   phone: '+6281298765432',
   assignedFleet: 'all',
-  avatarInitials: 'BP',
+  avatarInitials: 'RS',
   notifyWhatsapp: true,
   notifyEmail: true,
   notifyPush: true,

@@ -132,12 +132,16 @@ export default function Sidebar() {
       <aside className={`sidebar ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
         {/* Brand Header */}
         <div className="sidebar-header">
-          <div className="brand-icon-box">
-            <Anchor size={24} />
+          <div className="brand-icon-box" style={{ background: '#08142b', border: '1px solid rgba(37,99,235,0.4)' }}>
+            <svg width="26" height="26" viewBox="0 0 48 48" fill="none">
+              <polygon points="24,5 41,23 7,23" fill="#16a34a" />
+              <path d="M7,25 H41 C40,33 34,36 24,36 C14,36 8,33 7,25 Z" fill="#0284c7" />
+              <path d="M8,32 C12,42 17,44 24,44 C31,44 36,42 40,32 C34,41 14,41 8,32 Z" fill="#eab308" />
+            </svg>
           </div>
           <div style={{ flex: 1 }}>
-            <div className="brand-title">PMS MARITIM</div>
-            <div className="brand-subtitle">Fleet Maintenance System</div>
+            <div className="brand-title" style={{ fontSize: '0.98rem' }}>BAHARIMAS</div>
+            <div className="brand-subtitle">Kalimantan Fleet PMS</div>
           </div>
           {/* Mobile close button */}
           <button
