@@ -15,7 +15,7 @@ import { useApp } from '../../context/AppContext';
 export default function LoginPage() {
   const { login, DEMO_ACCOUNTS } = useApp();
 
-  const [email, setEmail] = useState('admin@baharimas.co.id');
+  const [email, setEmail] = useState('admin@pmsarmada.id');
   const [password, setPassword] = useState('123');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
@@ -59,13 +59,13 @@ export default function LoginPage() {
                 </svg>
               </div>
               <h1 className="bhk-company-name">
-                PT PELAYARAN BAHARIMAS KALIMANTAN
+                SISTEM PMS ARMADA NUSANTARA
               </h1>
             </div>
 
             {/* Description */}
             <p className="bhk-company-desc">
-              Pusat sistem digital operasional armada kapal tunda (tugboat), tongkang, dan kapal kargo niaga perairan Kalimantan Barat dan jalur pelayaran Nusantara.
+              Pusat sistem digital operasional armada kapal niaga terpadu untuk monitoring perawatan terencana (PMS), logistik suku cadang, kelaiklautan dokumen, absensi dinas, dan kasbon crew pelayaran Nusantara.
             </p>
 
             {/* Head Office Address & Contact Card */}
@@ -73,19 +73,19 @@ export default function LoginPage() {
               <div className="bhk-contact-item">
                 <MapPin size={18} className="bhk-pin-icon" />
                 <div className="bhk-contact-text">
-                  <span className="bhk-contact-label">Alamat Kantor Pusat:</span>{' '}
-                  Jl. Adi Sucipto KM 6, Kompleks Bahari Permai No. 2, RT. 004 / RW. 004, Desa Sungai Raya, Kec. Sungai Raya, Kab. Kubu Raya - Pontianak, Kalimantan Barat
+                  <span className="bhk-contact-label">Pusat Komando & Operasional:</span>{' '}
+                  Maritime Fleet Operations & Port Command Center, Kawasan Pelabuhan Tanjung Priok, Jakarta Utara - Indonesia
                 </div>
               </div>
 
               <div className="bhk-contact-footer-row">
                 <div className="bhk-contact-subitem">
                   <Phone size={14} className="bhk-phone-icon" />
-                  <span>Telp: (0561) 531016 / 732194</span>
+                  <span>Telp: (021) 4390-8800 / 24-Jam Support</span>
                 </div>
                 <div className="bhk-contact-subitem">
                   <Mail size={14} className="bhk-mail-icon" />
-                  <span>pt.baharimas@hotmail.com</span>
+                  <span>support@pmsarmada.id</span>
                 </div>
               </div>
             </div>
@@ -98,7 +98,7 @@ export default function LoginPage() {
               <div className="bhk-card-header">
                 <h2 className="bhk-card-title">Masuk ke Portal PMS</h2>
                 <p className="bhk-card-subtitle">
-                  Gunakan akun korporat PT. Pelayaran Baharimas Kalimantan
+                  Gunakan akun kredensial resmi untuk mengakses sistem monitoring armada kapal
                 </p>
               </div>
 
@@ -106,7 +106,7 @@ export default function LoginPage() {
               <form onSubmit={handleSubmit} className="bhk-form">
                 <div className="bhk-form-group">
                   <label className="bhk-label" htmlFor="bhk-email">
-                    Email / Akun Korporat
+                    Email / Akun Pengguna
                   </label>
                   <div className="bhk-input-wrap">
                     <Mail size={16} className="bhk-input-icon" />
@@ -116,7 +116,7 @@ export default function LoginPage() {
                       className="bhk-input"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="admin@baharimas.co.id"
+                      placeholder="admin@pmsarmada.id"
                       required
                     />
                   </div>
@@ -206,7 +206,7 @@ export default function LoginPage() {
 
         {/* Bottom System Disclaimer & Compliance Footer */}
         <footer className="bhk-page-footer">
-          © 2026 PT. Pelayaran Baharimas Kalimantan • ISM Code & Biro Klasifikasi Indonesia (BKI) Compliant
+          © 2026 Sistem PMS Armada Nusantara • ISM Code & Biro Klasifikasi Indonesia (BKI) Compliant
         </footer>
       </div>
     </div>

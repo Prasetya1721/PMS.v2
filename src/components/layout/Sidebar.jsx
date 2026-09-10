@@ -140,8 +140,8 @@ export default function Sidebar() {
             </svg>
           </div>
           <div style={{ flex: 1 }}>
-            <div className="brand-title" style={{ fontSize: '0.98rem' }}>BAHARIMAS</div>
-            <div className="brand-subtitle">Kalimantan Fleet PMS</div>
+            <div className="brand-title" style={{ fontSize: '0.98rem' }}>PMS ARMADA</div>
+            <div className="brand-subtitle">Fleet Maintenance System</div>
           </div>
           {/* Mobile close button */}
           <button
