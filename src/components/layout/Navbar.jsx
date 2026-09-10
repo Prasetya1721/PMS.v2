@@ -1,5 +1,5 @@
 import React from 'react';
-import { Ship, Bell, PlusCircle, ShieldCheck, DollarSign, CalendarCheck, Calendar } from 'lucide-react';
+import { Ship, Bell } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 
 export default function Navbar({ onOpenQuickAction }) {
@@ -36,58 +36,6 @@ export default function Navbar({ onOpenQuickAction }) {
       </div>
 
       <div className="navbar-right">
-        {/* Quick Actions */}
-        <button
-          type="button"
-          className="quick-action-btn secondary"
-          onClick={() => setActiveTab('google-calendar')}
-          title="Buka Sinkronisasi Google Calendar"
-        >
-          <Calendar size={16} color="#1a73e8" />
-          <span>Google Calendar</span>
-        </button>
-
-        <button
-          type="button"
-          className="quick-action-btn secondary"
-          onClick={() => setActiveTab('crew-absen')}
-          title="Catat Presensi Harian Crew"
-        >
-          <CalendarCheck size={16} color="#0284c7" />
-          <span>Presensi Absen</span>
-        </button>
-
-        <button
-          type="button"
-          className="quick-action-btn secondary"
-          onClick={() => setActiveTab('crew-kasbon')}
-          title="Buka Modul Pengajuan Kasbon"
-        >
-          <DollarSign size={16} color="#7c3aed" />
-          <span>Sistem Kasbon</span>
-          {pendingKasbon > 0 && (
-            <span style={{
-              backgroundColor: '#e11d48',
-              color: '#ffffff',
-              borderRadius: '9999px',
-              padding: '0.1rem 0.4rem',
-              fontSize: '0.7rem',
-              fontWeight: '700'
-            }}>
-              {pendingKasbon}
-            </span>
-          )}
-        </button>
-
-        <button
-          type="button"
-          className="quick-action-btn"
-          onClick={() => setActiveTab('wa-simulator')}
-          title="Kirim Pesan WhatsApp Reminder Simulator"
-        >
-          <PlusCircle size={16} />
-          <span>Simulasi WA Alert</span>
-        </button>
 
         {/* Notification Bell */}
         <button
