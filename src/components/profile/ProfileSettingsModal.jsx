@@ -9,7 +9,8 @@ import {
   Lock,
   Ship,
   Save,
-  KeyRound
+  KeyRound,
+  LogOut
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import Modal from '../common/Modal';
@@ -21,7 +22,8 @@ export default function ProfileSettingsModal() {
     updateUserProfile,
     isProfileModalOpen,
     setIsProfileModalOpen,
-    ships
+    ships,
+    logout
   } = useApp();
 
   const [formData, setFormData] = useState(userProfile);
@@ -371,6 +373,41 @@ export default function ProfileSettingsModal() {
                   placeholder="Ulangi sandi baru..."
                 />
               </div>
+            </div>
+
+            {/* Logout Session Card */}
+            <div style={{
+              marginTop: '1.5rem',
+              padding: '1rem',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid #fecdd3',
+              backgroundColor: '#fff1f2',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '0.75rem'
+            }}>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#9f1239' }}>
+                  Keluar dari Sesi Akun
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#881337' }}>
+                  Kembali ke portal login atau beralih ke role user lain
+                </div>
+              </div>
+              <button
+                type="button"
+                className="btn btn-danger"
+                style={{ fontSize: '0.8rem', padding: '0.45rem 0.85rem' }}
+                onClick={() => {
+                  setIsProfileModalOpen(false);
+                  logout();
+                }}
+              >
+                <LogOut size={14} />
+                <span>Logout Sekarang</span>
+              </button>
             </div>
           </div>
         )}

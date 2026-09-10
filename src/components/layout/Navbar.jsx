@@ -1,5 +1,5 @@
 import React from 'react';
-import { Ship, Bell, Menu, X } from 'lucide-react';
+import { Ship, Bell, Menu, X, LogOut } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 
 export default function Navbar({ onOpenQuickAction }) {
@@ -15,7 +15,8 @@ export default function Navbar({ onOpenQuickAction }) {
     userProfile,
     setIsProfileModalOpen,
     isMobileMenuOpen,
-    setIsMobileMenuOpen
+    setIsMobileMenuOpen,
+    logout
   } = useApp();
 
   // Count pending alerts
@@ -84,6 +85,18 @@ export default function Navbar({ onOpenQuickAction }) {
             <span className="user-role">{userProfile?.role || 'Super Admin'}</span>
           </div>
         </div>
+
+        {/* Logout / Switch Account Button */}
+        <button
+          type="button"
+          className="icon-btn"
+          onClick={logout}
+          title="Keluar / Ganti Akun (Menu Login)"
+          aria-label="Keluar / Ganti Akun"
+          style={{ color: '#e11d48' }}
+        >
+          <LogOut size={18} />
+        </button>
       </div>
     </header>
   );

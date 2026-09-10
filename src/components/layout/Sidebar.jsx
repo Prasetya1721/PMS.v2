@@ -17,7 +17,8 @@ import {
   CheckCircle2,
   CalendarPlus,
   UserCog,
-  X
+  X,
+  LogIn
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 
@@ -31,7 +32,8 @@ export default function Sidebar() {
     certificates,
     setIsProfileModalOpen,
     isMobileMenuOpen,
-    setIsMobileMenuOpen
+    setIsMobileMenuOpen,
+    logout
   } = useApp();
 
   const overdueWoCount = workOrders.filter(w => w.status === 'Overdue').length;
@@ -110,7 +112,8 @@ export default function Sidebar() {
     {
       groupTitle: 'Pengaturan & Akun',
       items: [
-        { key: 'profile-settings', label: 'Pengaturan Profil', icon: UserCog }
+        { key: 'profile-settings', label: 'Pengaturan Profil', icon: UserCog },
+        { key: 'menu-login', label: 'Menu Login / Ganti Akun', icon: LogIn }
       ]
     }
   ];
@@ -165,6 +168,8 @@ export default function Sidebar() {
                           setIsMobileMenuOpen(false);
                           if (item.key === 'profile-settings') {
                             setIsProfileModalOpen(true);
+                          } else if (item.key === 'menu-login') {
+                            logout();
                           } else {
                             setActiveTab(item.key);
                           }

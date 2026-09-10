@@ -17,10 +17,33 @@ import WhatsAppSimulator from './components/notification/WhatsAppSimulator';
 import NotificationHistory from './components/notification/NotificationHistory';
 import GoogleCalendarModule from './components/calendar/GoogleCalendarModule';
 import ProfileSettingsModal from './components/profile/ProfileSettingsModal';
+import LoginPage from './components/auth/LoginPage';
 import { Info, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 export default function App() {
-  const { activeTab, toast } = useApp();
+  const { activeTab, toast, isAuthenticated } = useApp();
+
+  if (!isAuthenticated) {
+    return (
+      <>
+        <LoginPage />
+        {toast && (
+          <div className="toast-notification">
+            {toast.type === 'success' ? (
+              <CheckCircle2 size={20} color="#059669" />
+            ) : toast.type === 'warning' ? (
+              <AlertTriangle size={20} color="#d97706" />
+            ) : (
+              <Info size={20} color="#0284c7" />
+            )}
+            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--brand-navy-900)' }}>
+              {toast.message}
+            </span>
+          </div>
+        )}
+      </>
+    );
+  }
 
   const renderContent = () => {
     switch (activeTab) {

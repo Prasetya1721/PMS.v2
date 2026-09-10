@@ -15,13 +15,71 @@ import {
   INITIAL_COST_DATA
 } from '../data/initialData';
 
+export const DEMO_ACCOUNTS = [
+  {
+    id: 'user-admin',
+    name: 'Capt. Bambang Prasetyo, M.Mar',
+    email: 'admin@maritim.com',
+    role: 'Super Admin & Port Capt.',
+    phone: '+6281298765432',
+    assignedFleet: 'all',
+    avatarInitials: 'BP',
+    badgeVariant: 'purple',
+    description: 'Akses penuh seluruh armada, persetujuan teknis, dan audit sistem'
+  },
+  {
+    id: 'user-master',
+    name: 'Capt. Bambang Wijaya, M.Mar',
+    email: 'master@maritim.com',
+    role: 'Nakhoda / Master Kapal',
+    phone: '+628112345678',
+    assignedFleet: 'ship-1',
+    avatarInitials: 'BW',
+    badgeVariant: 'primary',
+    description: 'Persetujuan kasbon kapal, checklist keselamatan, dan voyage report'
+  },
+  {
+    id: 'user-chief',
+    name: 'Agus Setiawan, ATT-II',
+    email: 'chief.eng@maritim.com',
+    role: 'Chief Engineer / C/E',
+    phone: '+628134567890',
+    assignedFleet: 'ship-1',
+    avatarInitials: 'AS',
+    badgeVariant: 'warning',
+    description: 'Pencatatan jam kerja mesin, penyelesaian Work Order & sparepart'
+  },
+  {
+    id: 'user-finance',
+    name: 'Siti Rahmawati, S.E.',
+    email: 'finance@maritim.com',
+    role: 'Finance & Accounting',
+    phone: '+628156789012',
+    assignedFleet: 'all',
+    avatarInitials: 'SR',
+    badgeVariant: 'success',
+    description: 'Verifikasi & pencairan kasbon crew, budgeting armada & rekap biaya'
+  },
+  {
+    id: 'user-crewing',
+    name: 'Dedi Kurniawan, S.Psi',
+    email: 'crewing@maritim.com',
+    role: 'Personalia & Crewing HR',
+    phone: '+628198765432',
+    assignedFleet: 'all',
+    avatarInitials: 'DK',
+    badgeVariant: 'info',
+    description: 'Monitoring masa berlaku sertifikat pelaut STCW, absensi & cuti'
+  }
+];
+
 export const INITIAL_USER_PROFILE = {
-  name: 'Fleet Admin',
-  email: 'setpraas17@gmail.com',
+  name: 'Capt. Bambang Prasetyo, M.Mar',
+  email: 'admin@maritim.com',
   role: 'Super Admin & Port Capt.',
   phone: '+6281298765432',
   assignedFleet: 'all',
-  avatarInitials: 'FA',
+  avatarInitials: 'BP',
   notifyWhatsapp: true,
   notifyEmail: true,
   notifyPush: true,
@@ -58,6 +116,7 @@ export function AppProvider({ children }) {
   const [notifications, setNotifications] = useState(() => loadState('notifications', INITIAL_NOTIFICATION_LOGS));
   const [costData, setCostData] = useState(() => loadState('costData', INITIAL_COST_DATA));
   const [userProfile, setUserProfile] = useState(() => loadState('userProfile', INITIAL_USER_PROFILE));
+  const [isAuthenticated, setIsAuthenticated] = useState(() => loadState('isAuthenticated', true));
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -86,7 +145,8 @@ export function AppProvider({ children }) {
     localStorage.setItem('pms_drills', JSON.stringify(drills));
     localStorage.setItem('pms_notifications', JSON.stringify(notifications));
     localStorage.setItem('pms_userProfile', JSON.stringify(userProfile));
-  }, [ships, equipment, workOrders, spareparts, crew, attendance, kasbon, certificates, shipDocuments, leaveRequests, drills, notifications, userProfile]);
+    localStorage.setItem('pms_isAuthenticated', JSON.stringify(isAuthenticated));
+  }, [ships, equipment, workOrders, spareparts, crew, attendance, kasbon, certificates, shipDocuments, leaveRequests, drills, notifications, userProfile, isAuthenticated]);
 
   // Helper: Update Running Hours
   const updateRunningHours = (eqId, newHours, notes = '') => {
@@ -375,6 +435,41 @@ export function AppProvider({ children }) {
     showToast('Pengaturan profil pengguna berhasil disimpan!', 'success');
   };
 
+  // Auth Handlers
+  const login = (userData) => {
+    let targetUser = userData;
+    if (typeof userData === 'string') {
+      const found = DEMO_ACCOUNTS.find(u => u.email.toLowerCase() === userData.toLowerCase());
+      targetUser = found || {
+        name: userData.split('@')[0],
+        email: userData,
+        role: 'Fleet User',
+        phone: '+6281200000000',
+        assignedFleet: 'all',
+        avatarInitials: userData.substring(0, 2).toUpperCase()
+      };
+    }
+
+    const initials = targetUser.avatarInitials || (targetUser.name
+      ? targetUser.name.split(' ').filter(Boolean).map(w => w[0]).join('').substring(0, 2).toUpperCase()
+      : 'FA');
+
+    const updatedProfile = {
+      ...INITIAL_USER_PROFILE,
+      ...targetUser,
+      avatarInitials: initials
+    };
+
+    setUserProfile(updatedProfile);
+    setIsAuthenticated(true);
+    showToast(`Selamat datang, ${updatedProfile.name}!`, 'success');
+  };
+
+  const logout = () => {
+    setIsAuthenticated(false);
+    showToast('Anda telah keluar dari sesi PMS Maritim.', 'info');
+  };
+
   return (
     <AppContext.Provider value={{
       selectedShip,
@@ -396,6 +491,11 @@ export function AppProvider({ children }) {
       costData,
       userProfile,
       updateUserProfile,
+      isAuthenticated,
+      setIsAuthenticated,
+      login,
+      logout,
+      DEMO_ACCOUNTS,
       isProfileModalOpen,
       setIsProfileModalOpen,
       isMobileMenuOpen,
