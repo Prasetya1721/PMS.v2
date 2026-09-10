@@ -32,9 +32,8 @@ export default function LoginPage() {
 
   return (
     <div className="bhk-login-wrapper">
-      {/* Background Ambient Glows */}
-      <div className="bhk-ambient-glow bhk-glow-top-right" />
-      <div className="bhk-ambient-glow bhk-glow-bottom-left" />
+      {/* Blue & White Dual-Tone Decorative Angled Background */}
+      <div className="bhk-bg-decor" />
 
       <div className="bhk-login-container">
         <div className="bhk-login-columns">
@@ -51,7 +50,7 @@ export default function LoginPage() {
                 <img src={logoAt} alt="AT Logo" className="bhk-brand-logo-img" />
               </div>
               <h1 className="bhk-company-name">
-                SISTEM PMS ARMADA NUSANTARA
+                Sistem PMS
               </h1>
             </div>
 
@@ -180,7 +179,7 @@ export default function LoginPage() {
             Dibuat dengan <Heart size={14} className="bhk-heart-icon" fill="#ef4444" color="#ef4444" /> oleh <span className="bhk-author-name">Pras</span>
           </div>
           <div className="bhk-footer-compliance">
-            © 2026 Sistem PMS Armada Nusantara • ISM Code & Biro Klasifikasi Indonesia (BKI) Compliant
+            © 2026 Sistem PMS • ISM Code & Biro Klasifikasi Indonesia (BKI) Compliant
           </div>
         </footer>
       </div>

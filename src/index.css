@@ -1285,40 +1285,28 @@ textarea.form-control {
 .bhk-login-wrapper {
   min-height: 100vh;
   width: 100%;
-  background-color: #f8fafc;
-  background-image: 
-    radial-gradient(circle at 85% 15%, rgba(2, 132, 199, 0.08) 0%, transparent 40%),
-    radial-gradient(circle at 15% 85%, rgba(37, 99, 235, 0.06) 0%, transparent 45%);
+  background-color: #f1f5f9;
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 3rem 1.5rem;
+  padding: 2.25rem 1.5rem 2rem;
   overflow-x: hidden;
 }
 
-.bhk-ambient-glow {
+/* Blue & White Dual-Tone Angled Header Banner (Matches Example) */
+.bhk-bg-decor {
   position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 560px;
+  background: 
+    radial-gradient(circle at 85% 20%, rgba(56, 189, 248, 0.25) 0%, transparent 45%),
+    linear-gradient(135deg, #07193b 0%, #11366c 48%, #0284c7 100%);
+  clip-path: polygon(0 0, 100% 0, 100% 68%, 0 100%);
+  z-index: 0;
   pointer-events: none;
-  border-radius: 50%;
-  filter: blur(80px);
-  z-index: 1;
-}
-
-.bhk-glow-top-right {
-  top: 5%;
-  right: 15%;
-  width: 320px;
-  height: 320px;
-  background: rgba(2, 132, 199, 0.07);
-}
-
-.bhk-glow-bottom-left {
-  bottom: 5%;
-  left: 10%;
-  width: 360px;
-  height: 360px;
-  background: rgba(37, 99, 235, 0.06);
 }
 
 .bhk-login-container {
@@ -1336,35 +1324,38 @@ textarea.form-control {
   display: grid;
   grid-template-columns: 1.05fr 1fr;
   gap: 3.5rem;
-  align-items: center;
+  align-items: flex-start;
+  padding-top: 0.5rem;
 }
 
-/* LEFT COLUMN */
+/* LEFT COLUMN (ON BLUE BACKGROUND) */
 .bhk-left-col {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   text-align: left;
+  padding-top: 1.5rem;
 }
 
 .bhk-pill-badge {
   display: inline-block;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  color: #1d4ed8;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #ffffff;
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   padding: 0.35rem 0.9rem;
   border-radius: 9999px;
   margin-bottom: 1.5rem;
-  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.08);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(8px);
 }
 
 .bhk-brand-header {
   display: flex;
   align-items: center;
-  gap: 0.875rem;
+  gap: 1rem;
   margin-bottom: 1.25rem;
 }
 
@@ -1373,12 +1364,12 @@ textarea.form-control {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 56px;
-  height: 56px;
+  width: 58px;
+  height: 58px;
   background: #ffffff;
-  border: 1px solid #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.6);
   border-radius: var(--radius-lg);
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
   padding: 6px;
 }
 
@@ -1386,24 +1377,26 @@ textarea.form-control {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  filter: drop-shadow(0 2px 4px rgba(15, 23, 42, 0.08));
+  filter: drop-shadow(0 2px 4px rgba(15, 23, 42, 0.1));
 }
 
 .bhk-company-name {
-  font-size: 1.35rem;
+  font-size: 1.75rem;
   font-weight: 800;
-  color: #0f172a;
+  color: #ffffff;
   letter-spacing: -0.01em;
-  line-height: 1.25;
+  line-height: 1.2;
   margin: 0;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
 .bhk-company-desc {
-  font-size: 0.9rem;
-  color: #475569;
+  font-size: 0.925rem;
+  color: #f1f5f9;
   line-height: 1.7;
   max-width: 480px;
   margin-bottom: 0;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
 }
 
 /* RIGHT COLUMN (LOGIN CARD) */
@@ -1794,6 +1787,11 @@ textarea.form-control {
 
 /* Responsive adjustments for Tablets and Mobile */
 @media (max-width: 960px) {
+  .bhk-bg-decor {
+    height: 400px;
+    clip-path: polygon(0 0, 100% 0, 100% 82%, 0 100%);
+  }
+
   .bhk-login-columns {
     grid-template-columns: 1fr;
     gap: 2.5rem;

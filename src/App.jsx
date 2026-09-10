@@ -102,12 +102,12 @@ export default function App() {
                   Dibuat dengan <Heart size={13} className="bhk-heart-icon" fill="#ef4444" color="#ef4444" /> oleh <strong className="bhk-author-name">Pras</strong>
                 </span>
                 <span className="app-footer-compliance">
-                  © 2026 Sistem PMS Armada Nusantara • ISM Code & Biro Klasifikasi Indonesia (BKI) Compliant
+                  © 2026 Sistem PMS • ISM Code & Biro Klasifikasi Indonesia (BKI) Compliant
                 </span>
               </div>
             </div>
             <div className="app-footer-right">
-              <span className="app-footer-badge">Sistem PMS Armada v2.4</span>
+              <span className="app-footer-badge">Sistem PMS v2.4</span>
             </div>
           </div>
         </footer>

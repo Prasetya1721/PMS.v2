@@ -137,7 +137,7 @@ export default function Sidebar() {
             <img src={logoAt} alt="AT Logo" style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
           </div>
           <div style={{ flex: 1 }}>
-            <div className="brand-title" style={{ fontSize: '0.98rem' }}>PMS ARMADA</div>
+            <div className="brand-title" style={{ fontSize: '0.98rem' }}>SISTEM PMS</div>
             <div className="brand-subtitle">Fleet Maintenance System</div>
           </div>
           {/* Mobile close button */}
