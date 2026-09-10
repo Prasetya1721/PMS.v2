@@ -14,7 +14,8 @@ import {
   MessageSquare,
   BellRing,
   Anchor,
-  CheckCircle2
+  CheckCircle2,
+  CalendarPlus
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 
@@ -87,8 +88,9 @@ export default function Sidebar() {
       ]
     },
     {
-      groupTitle: 'Notifikasi & Reminder',
+      groupTitle: 'Notifikasi & Kalender',
       items: [
+        { key: 'google-calendar', label: 'Google Calendar Sync', icon: CalendarPlus, highlight: true },
         { key: 'wa-simulator', label: 'WhatsApp Simulator', icon: MessageSquare },
         { key: 'notifications', label: 'Log Reminder Terkirim', icon: BellRing }
       ]

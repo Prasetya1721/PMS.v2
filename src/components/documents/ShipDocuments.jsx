@@ -8,12 +8,14 @@ import {
   Eye,
   Download,
   ShieldCheck,
-  Send
+  Send,
+  CalendarPlus
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import Badge from '../common/Badge';
 import StatCard from '../common/StatCard';
 import Modal from '../common/Modal';
+import { openGoogleCalendarEvent } from '../../utils/calendarUtils';
 
 export default function ShipDocuments() {
   const { shipDocuments, ships, selectedShip, exportToCsv, sendSimulatedWhatsApp } = useApp();
@@ -223,6 +225,19 @@ export default function ShipDocuments() {
                             >
                               <Eye size={13} />
                               <span>Lihat</span>
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-secondary"
+                              onClick={() => openGoogleCalendarEvent({
+                                title: `[DOKUMEN KAPAL] Jatuh Tempo: ${doc.docName} (${doc.shipName})`,
+                                details: `Peringatan Masa Berlaku Surat Kapal:\nDokumen: ${doc.docName}\nNomor: ${doc.certNo}\nKapal: ${doc.shipName}\nPenerbit: ${doc.issuingAuthority}\nStatus: ${doc.status}`,
+                                startDate: doc.expiryDate,
+                                location: doc.shipName
+                              })}
+                              title="Tambahkan Pengingat ke Google Calendar"
+                            >
+                              <CalendarPlus size={13} color="#1a73e8" />
                             </button>
                             {(isExpired || isDueSoon) && (
                               <button

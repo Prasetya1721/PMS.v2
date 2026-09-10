@@ -39,6 +39,11 @@ Dashboard Planned Maintenance System (PMS) berbasis web dengan tema **Light Mode
    - Preview pesan reminder resmi ke WhatsApp smartphone crew/admin.
    - Uji coba pengiriman real-time dan log audit notifikasi terkirim.
 
+8. **Integrasi & Notifikasi Google Calendar**:
+   - Sinkronisasi satu-klik jadwal perawatan mesin (WO), jatuh tempo surat kapal, dan sertifikat pelaut langsung ke Google Calendar smartphone/desktop.
+   - Pengingat otomatis terkonfigurasi (Pop-up notifikasi H-1 dan email H-7 sebelum jatuh tempo).
+   - Ekspor kalender universal `.ICS` (kompatibel dengan Google Calendar, Outlook, Apple Calendar).
+
 ---
 
 ## 🚀 Menjalankan Aplikasi Secara Lokal

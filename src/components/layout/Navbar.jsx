@@ -1,5 +1,5 @@
 import React from 'react';
-import { Ship, Bell, PlusCircle, ShieldCheck, DollarSign, CalendarCheck } from 'lucide-react';
+import { Ship, Bell, PlusCircle, ShieldCheck, DollarSign, CalendarCheck, Calendar } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 
 export default function Navbar({ onOpenQuickAction }) {
@@ -37,6 +37,16 @@ export default function Navbar({ onOpenQuickAction }) {
 
       <div className="navbar-right">
         {/* Quick Actions */}
+        <button
+          type="button"
+          className="quick-action-btn secondary"
+          onClick={() => setActiveTab('google-calendar')}
+          title="Buka Sinkronisasi Google Calendar"
+        >
+          <Calendar size={16} color="#1a73e8" />
+          <span>Google Calendar</span>
+        </button>
+
         <button
           type="button"
           className="quick-action-btn secondary"

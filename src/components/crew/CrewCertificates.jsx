@@ -7,12 +7,14 @@ import {
   Clock,
   Eye,
   Download,
-  FileText
+  FileText,
+  CalendarPlus
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import Badge from '../common/Badge';
 import StatCard from '../common/StatCard';
 import Modal from '../common/Modal';
+import { openGoogleCalendarEvent } from '../../utils/calendarUtils';
 
 export default function CrewCertificates() {
   const { certificates, crew, ships, selectedShip, exportToCsv, sendSimulatedWhatsApp } = useApp();
@@ -221,6 +223,19 @@ export default function CrewCertificates() {
                             >
                               <Eye size={13} />
                               <span>Lihat Scan</span>
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-secondary"
+                              onClick={() => openGoogleCalendarEvent({
+                                title: `[SERTIFIKAT CREW] Renewal: ${cert.crewName} - ${cert.certName}`,
+                                details: `Pembaruan Sertifikat Pelaut:\nNama: ${cert.crewName}\nSertifikat: ${cert.certName} (${cert.certType})\nNomor Register: ${cert.certNo}\nPenerbit: ${cert.issuingAuthority}\nJatuh Tempo: ${cert.expiryDate}`,
+                                startDate: cert.expiryDate,
+                                location: 'Biro Diklat Pelaut'
+                              })}
+                              title="Tambahkan Pengingat ke Google Calendar"
+                            >
+                              <CalendarPlus size={13} color="#1a73e8" />
                             </button>
                             {(isExpired || isDueSoon) && (
                               <button

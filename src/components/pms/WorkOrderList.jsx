@@ -11,6 +11,7 @@ import {
   Wrench,
   Download,
   Calendar,
+  CalendarPlus,
   CheckSquare,
   Square
 } from 'lucide-react';
@@ -18,6 +19,7 @@ import { useApp } from '../../context/AppContext';
 import Badge from '../common/Badge';
 import StatCard from '../common/StatCard';
 import Modal from '../common/Modal';
+import { openGoogleCalendarEvent } from '../../utils/calendarUtils';
 
 export default function WorkOrderList() {
   const {
@@ -278,7 +280,22 @@ export default function WorkOrderList() {
                         </div>
                       </div>
 
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-secondary"
+                          onClick={() => openGoogleCalendarEvent({
+                            title: `[PMS WO] ${wo.title} (${wo.woNumber})`,
+                            details: `Instruksi Pekerjaan: ${wo.title}\nNomor WO: ${wo.woNumber}\nTeknisi Ditugaskan: ${wo.assignedTo}\nKapal: ${shipObj?.name}\nPrioritas: ${wo.priority}\nCatatan: ${wo.notes || '-'}`,
+                            startDate: wo.dueDate,
+                            location: shipObj?.name || 'Kamar Mesin'
+                          })}
+                          title="Simpan Jadwal WO ke Google Calendar"
+                        >
+                          <CalendarPlus size={13} color="#1a73e8" />
+                          <span>Google Cal</span>
+                        </button>
+
                         {!isCompleted && (
                           <button
                             type="button"

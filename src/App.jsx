@@ -15,6 +15,7 @@ import CrewLeaveAndDrill from './components/crew/CrewLeaveAndDrill';
 import ShipDocuments from './components/documents/ShipDocuments';
 import WhatsAppSimulator from './components/notification/WhatsAppSimulator';
 import NotificationHistory from './components/notification/NotificationHistory';
+import GoogleCalendarModule from './components/calendar/GoogleCalendarModule';
 import { Info, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 export default function App() {
@@ -46,6 +47,8 @@ export default function App() {
         return <ShipDocuments />;
       case 'wa-simulator':
         return <WhatsAppSimulator />;
+      case 'google-calendar':
+        return <GoogleCalendarModule />;
       case 'notifications':
         return <NotificationHistory />;
       default:
