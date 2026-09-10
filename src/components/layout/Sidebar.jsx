@@ -21,6 +21,7 @@ import {
   LogIn
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import logoAt from '../../assets/logo-at.png';
 
 export default function Sidebar() {
   const {
@@ -132,12 +133,8 @@ export default function Sidebar() {
       <aside className={`sidebar ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
         {/* Brand Header */}
         <div className="sidebar-header">
-          <div className="brand-icon-box" style={{ background: '#08142b', border: '1px solid rgba(37,99,235,0.4)' }}>
-            <svg width="26" height="26" viewBox="0 0 48 48" fill="none">
-              <polygon points="24,5 41,23 7,23" fill="#16a34a" />
-              <path d="M7,25 H41 C40,33 34,36 24,36 C14,36 8,33 7,25 Z" fill="#0284c7" />
-              <path d="M8,32 C12,42 17,44 24,44 C31,44 36,42 40,32 C34,41 14,41 8,32 Z" fill="#eab308" />
-            </svg>
+          <div className="brand-icon-box" style={{ background: '#ffffff', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px', boxShadow: '0 2px 6px rgba(15,23,42,0.06)' }}>
+            <img src={logoAt} alt="AT Logo" style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
           </div>
           <div style={{ flex: 1 }}>
             <div className="brand-title" style={{ fontSize: '0.98rem' }}>PMS ARMADA</div>

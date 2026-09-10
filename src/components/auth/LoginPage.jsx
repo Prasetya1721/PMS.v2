@@ -6,8 +6,6 @@ import {
   EyeOff,
   ArrowRight,
   Zap,
-  MapPin,
-  Phone,
   ChevronRight,
   Heart
 } from 'lucide-react';
@@ -49,16 +47,8 @@ export default function LoginPage() {
 
             {/* Company Logo & Brand Name */}
             <div className="bhk-brand-header">
-              {/* Geometric Maritime Boat Emblem (Green sail, Blue & Yellow Hull) */}
               <div className="bhk-logo-icon">
-                <svg width="42" height="42" viewBox="0 0 48 48" fill="none">
-                  {/* Top Sail: Green Triangle */}
-                  <polygon points="24,5 41,23 7,23" fill="#16a34a" />
-                  {/* Upper Hull: Ocean Blue */}
-                  <path d="M7,25 H41 C40,33 34,36 24,36 C14,36 8,33 7,25 Z" fill="#0284c7" />
-                  {/* Lower Curved Keel: Golden Yellow */}
-                  <path d="M8,32 C12,42 17,44 24,44 C31,44 36,42 40,32 C34,41 14,41 8,32 Z" fill="#eab308" />
-                </svg>
+                <img src={logoAt} alt="AT Logo" className="bhk-brand-logo-img" />
               </div>
               <h1 className="bhk-company-name">
                 SISTEM PMS ARMADA NUSANTARA
@@ -69,28 +59,6 @@ export default function LoginPage() {
             <p className="bhk-company-desc">
               Pusat sistem digital operasional armada kapal niaga terpadu untuk monitoring perawatan terencana (PMS), logistik suku cadang, kelaiklautan dokumen, absensi dinas, dan kasbon crew pelayaran Nusantara.
             </p>
-
-            {/* Head Office Address & Contact Card */}
-            <div className="bhk-contact-card">
-              <div className="bhk-contact-item">
-                <MapPin size={18} className="bhk-pin-icon" />
-                <div className="bhk-contact-text">
-                  <span className="bhk-contact-label">Pusat Komando & Operasional:</span>{' '}
-                  Maritime Fleet Operations & Port Command Center, Kawasan Pelabuhan Tanjung Priok, Jakarta Utara - Indonesia
-                </div>
-              </div>
-
-              <div className="bhk-contact-footer-row">
-                <div className="bhk-contact-subitem">
-                  <Phone size={14} className="bhk-phone-icon" />
-                  <span>Telp: (021) 4390-8800 / 24-Jam Support</span>
-                </div>
-                <div className="bhk-contact-subitem">
-                  <Mail size={14} className="bhk-mail-icon" />
-                  <span>support@pmsarmada.id</span>
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* ================= RIGHT COLUMN: Login Card ================= */}
@@ -208,9 +176,6 @@ export default function LoginPage() {
 
         {/* Bottom System Disclaimer & Compliance Footer */}
         <footer className="bhk-page-footer">
-          <div className="bhk-footer-logo-wrap">
-            <img src={logoAt} alt="AT Logo" className="bhk-footer-logo" />
-          </div>
           <div className="bhk-footer-credit">
             Dibuat dengan <Heart size={14} className="bhk-heart-icon" fill="#ef4444" color="#ef4444" /> oleh <span className="bhk-author-name">Pras</span>
           </div>
