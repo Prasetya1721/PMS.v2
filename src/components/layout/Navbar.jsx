@@ -1,9 +1,22 @@
 import React from 'react';
-import { Ship, Bell } from 'lucide-react';
+import { Ship, Bell, Menu, X } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 
 export default function Navbar({ onOpenQuickAction }) {
-  const { selectedShip, setSelectedShip, ships, notifications, setActiveTab, kasbon, workOrders, shipDocuments } = useApp();
+  const {
+    selectedShip,
+    setSelectedShip,
+    ships,
+    notifications,
+    setActiveTab,
+    kasbon,
+    workOrders,
+    shipDocuments,
+    userProfile,
+    setIsProfileModalOpen,
+    isMobileMenuOpen,
+    setIsMobileMenuOpen
+  } = useApp();
 
   // Count pending alerts
   const pendingKasbon = kasbon.filter(k => k.status.includes('Menunggu')).length;
@@ -14,10 +27,21 @@ export default function Navbar({ onOpenQuickAction }) {
   return (
     <header className="top-navbar">
       <div className="navbar-left">
+        {/* Mobile Hamburger Menu Toggle */}
+        <button
+          type="button"
+          className="mobile-menu-toggle-btn"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          aria-label={isMobileMenuOpen ? 'Tutup navigasi' : 'Buka navigasi'}
+          title={isMobileMenuOpen ? 'Tutup Navigasi' : 'Buka Navigasi'}
+        >
+          {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
+
         <div className="ship-selector-wrapper">
           <label className="ship-select-label" htmlFor="ship-select">
             <Ship size={15} color="#0284c7" />
-            <span>Kapal:</span>
+            <span className="ship-label-text">Kapal:</span>
           </label>
           <select
             id="ship-select"
@@ -36,7 +60,6 @@ export default function Navbar({ onOpenQuickAction }) {
       </div>
 
       <div className="navbar-right">
-
         {/* Notification Bell */}
         <button
           type="button"
@@ -48,12 +71,17 @@ export default function Navbar({ onOpenQuickAction }) {
           {totalAlerts > 0 && <span className="notification-badge-dot" />}
         </button>
 
-        {/* User Badge */}
-        <div className="user-profile-badge">
-          <div className="user-avatar">FA</div>
+        {/* User Profile Badge (Clickable) */}
+        <div
+          className="user-profile-badge"
+          style={{ cursor: 'pointer', transition: 'opacity 0.2s' }}
+          onClick={() => setIsProfileModalOpen(true)}
+          title="Klik untuk membuka Pengaturan Profil Pengguna"
+        >
+          <div className="user-avatar">{userProfile?.avatarInitials || 'FA'}</div>
           <div className="user-info">
-            <span className="user-name">Fleet Admin</span>
-            <span className="user-role">Super Admin & Port Capt.</span>
+            <span className="user-name">{userProfile?.name || 'Fleet Admin'}</span>
+            <span className="user-role">{userProfile?.role || 'Super Admin'}</span>
           </div>
         </div>
       </div>

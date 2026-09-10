@@ -15,6 +15,19 @@ import {
   INITIAL_COST_DATA
 } from '../data/initialData';
 
+export const INITIAL_USER_PROFILE = {
+  name: 'Fleet Admin',
+  email: 'setpraas17@gmail.com',
+  role: 'Super Admin & Port Capt.',
+  phone: '+6281298765432',
+  assignedFleet: 'all',
+  avatarInitials: 'FA',
+  notifyWhatsapp: true,
+  notifyEmail: true,
+  notifyPush: true,
+  thresholdReminder: 'H-30, H-14, H-7, H-1'
+};
+
 const AppContext = createContext();
 
 export function AppProvider({ children }) {
@@ -44,6 +57,9 @@ export function AppProvider({ children }) {
   const [drills, setDrills] = useState(() => loadState('drills', INITIAL_DRILLS));
   const [notifications, setNotifications] = useState(() => loadState('notifications', INITIAL_NOTIFICATION_LOGS));
   const [costData, setCostData] = useState(() => loadState('costData', INITIAL_COST_DATA));
+  const [userProfile, setUserProfile] = useState(() => loadState('userProfile', INITIAL_USER_PROFILE));
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Toast state
   const [toast, setToast] = useState(null);
@@ -69,7 +85,8 @@ export function AppProvider({ children }) {
     localStorage.setItem('pms_leaveRequests', JSON.stringify(leaveRequests));
     localStorage.setItem('pms_drills', JSON.stringify(drills));
     localStorage.setItem('pms_notifications', JSON.stringify(notifications));
-  }, [ships, equipment, workOrders, spareparts, crew, attendance, kasbon, certificates, shipDocuments, leaveRequests, drills, notifications]);
+    localStorage.setItem('pms_userProfile', JSON.stringify(userProfile));
+  }, [ships, equipment, workOrders, spareparts, crew, attendance, kasbon, certificates, shipDocuments, leaveRequests, drills, notifications, userProfile]);
 
   // Helper: Update Running Hours
   const updateRunningHours = (eqId, newHours, notes = '') => {
@@ -339,6 +356,25 @@ export function AppProvider({ children }) {
     showToast(`File ${filename} berhasil diunduh.`, 'success');
   };
 
+  // User Profile Updater
+  const updateUserProfile = (newProfile) => {
+    const initials = newProfile.name
+      ? newProfile.name
+          .split(' ')
+          .filter(Boolean)
+          .map(w => w[0])
+          .join('')
+          .substring(0, 2)
+          .toUpperCase()
+      : 'FA';
+
+    setUserProfile({
+      ...newProfile,
+      avatarInitials: initials
+    });
+    showToast('Pengaturan profil pengguna berhasil disimpan!', 'success');
+  };
+
   return (
     <AppContext.Provider value={{
       selectedShip,
@@ -358,6 +394,12 @@ export function AppProvider({ children }) {
       drills,
       notifications,
       costData,
+      userProfile,
+      updateUserProfile,
+      isProfileModalOpen,
+      setIsProfileModalOpen,
+      isMobileMenuOpen,
+      setIsMobileMenuOpen,
       toast,
       showToast,
       updateRunningHours,

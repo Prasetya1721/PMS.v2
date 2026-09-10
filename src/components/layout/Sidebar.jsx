@@ -15,12 +15,24 @@ import {
   BellRing,
   Anchor,
   CheckCircle2,
-  CalendarPlus
+  CalendarPlus,
+  UserCog,
+  X
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 
 export default function Sidebar() {
-  const { activeTab, setActiveTab, workOrders, kasbon, shipDocuments, certificates } = useApp();
+  const {
+    activeTab,
+    setActiveTab,
+    workOrders,
+    kasbon,
+    shipDocuments,
+    certificates,
+    setIsProfileModalOpen,
+    isMobileMenuOpen,
+    setIsMobileMenuOpen
+  } = useApp();
 
   const overdueWoCount = workOrders.filter(w => w.status === 'Overdue').length;
   const pendingKasbonCount = kasbon.filter(k => k.status.includes('Menunggu')).length;
@@ -94,37 +106,69 @@ export default function Sidebar() {
         { key: 'wa-simulator', label: 'WhatsApp Simulator', icon: MessageSquare },
         { key: 'notifications', label: 'Log Reminder Terkirim', icon: BellRing }
       ]
+    },
+    {
+      groupTitle: 'Pengaturan & Akun',
+      items: [
+        { key: 'profile-settings', label: 'Pengaturan Profil', icon: UserCog }
+      ]
     }
   ];
 
   return (
-    <aside className="sidebar">
-      {/* Brand Header */}
-      <div className="sidebar-header">
-        <div className="brand-icon-box">
-          <Anchor size={24} />
-        </div>
-        <div>
-          <div className="brand-title">PMS MARITIM</div>
-          <div className="brand-subtitle">Fleet Maintenance System</div>
-        </div>
-      </div>
+    <>
+      {/* Mobile Drawer Backdrop Overlay */}
+      {isMobileMenuOpen && (
+        <div
+          className="sidebar-backdrop"
+          onClick={() => setIsMobileMenuOpen(false)}
+          aria-label="Tutup menu samping"
+        />
+      )}
 
-      {/* Navigation Menus */}
-      <nav className="sidebar-menu">
-        {menuGroups.map((group, gIdx) => (
-          <div key={gIdx}>
-            <div className="menu-group-title">{group.groupTitle}</div>
-            <ul className="menu-list">
-              {group.items.map((item) => {
-                const Icon = item.icon;
-                const isActive = activeTab === item.key;
-                return (
-                  <li key={item.key}>
-                    <button
-                      type="button"
-                      className={`nav-item-btn ${isActive ? 'active' : ''}`}
-                      onClick={() => setActiveTab(item.key)}
+      <aside className={`sidebar ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
+        {/* Brand Header */}
+        <div className="sidebar-header">
+          <div className="brand-icon-box">
+            <Anchor size={24} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div className="brand-title">PMS MARITIM</div>
+            <div className="brand-subtitle">Fleet Maintenance System</div>
+          </div>
+          {/* Mobile close button */}
+          <button
+            type="button"
+            className="mobile-sidebar-close"
+            onClick={() => setIsMobileMenuOpen(false)}
+            aria-label="Tutup menu"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Navigation Menus */}
+        <nav className="sidebar-menu">
+          {menuGroups.map((group, gIdx) => (
+            <div key={gIdx}>
+              <div className="menu-group-title">{group.groupTitle}</div>
+              <ul className="menu-list">
+                {group.items.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.key;
+                  return (
+                    <li key={item.key}>
+                      <button
+                        type="button"
+                        className={`nav-item-btn ${isActive ? 'active' : ''}`}
+                        onClick={() => {
+                          setIsMobileMenuOpen(false);
+                          if (item.key === 'profile-settings') {
+                            setIsProfileModalOpen(true);
+                          } else {
+                            setActiveTab(item.key);
+                          }
+                        }}
                       style={item.highlight && !isActive ? { borderLeft: '3px solid #0284c7' } : undefined}
                     >
                       <Icon className="nav-icon" />
@@ -158,5 +202,6 @@ export default function Sidebar() {
         </div>
       </div>
     </aside>
+    </>
   );
 }

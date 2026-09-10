@@ -16,6 +16,7 @@ import ShipDocuments from './components/documents/ShipDocuments';
 import WhatsAppSimulator from './components/notification/WhatsAppSimulator';
 import NotificationHistory from './components/notification/NotificationHistory';
 import GoogleCalendarModule from './components/calendar/GoogleCalendarModule';
+import ProfileSettingsModal from './components/profile/ProfileSettingsModal';
 import { Info, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 export default function App() {
@@ -68,6 +69,9 @@ export default function App() {
           {renderContent()}
         </main>
       </div>
+
+      {/* Profile Settings Modal */}
+      <ProfileSettingsModal />
 
       {/* Toast Alert Banner */}
       {toast && (
