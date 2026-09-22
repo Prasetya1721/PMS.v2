@@ -12,7 +12,7 @@ import {
   Wrench,
   DollarSign
 } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../context/PMSContext';
 
 export default function WhatsAppSimulator() {
   const { sendSimulatedWhatsApp, crew, ships } = useApp();

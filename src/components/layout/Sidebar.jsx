@@ -1,213 +1,412 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { usePMS } from '../../context/PMSContext';
+import { MaritimeEmblem } from '../common/MaritimeLogo';
+import { hasAccessWithOverrides, ROLE_DEFINITIONS } from '../../utils/rbac';
+import { ProfileSettingsModal } from '../admin/ProfileSettingsModal';
 import {
   LayoutDashboard,
+  Ship,
   Wrench,
-  ClipboardList,
+  CalendarClock,
   Package,
-  PieChart,
+  DollarSign,
   Users,
+  FileCheck,
+  BellRing,
+  FileSpreadsheet,
+  ShieldCheck,
+  LogOut,
+  Sun,
+  Moon,
+  Database,
+  UserCog,
+  Palette,
+  Shield,
+  X,
   CalendarCheck,
   WalletCards,
-  Award,
-  LifeBuoy,
-  FileText,
   MessageSquare,
-  BellRing,
-  Anchor,
-  CheckCircle2,
-  CalendarPlus,
-  UserCog,
-  X,
-  LogIn
+  CalendarPlus
 } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
-import logoAt from '../../assets/logo-at.png';
 
-export default function Sidebar() {
+export const Sidebar = () => {
   const {
     activeTab,
     setActiveTab,
-    workOrders,
-    kasbon,
-    shipDocuments,
-    certificates,
-    setIsProfileModalOpen,
-    isMobileMenuOpen,
-    setIsMobileMenuOpen,
-    logout
-  } = useApp();
+    currentRole,
+    overdueWOCount,
+    expiredDocsCount,
+    lowStockCount,
+    openNCCount,
+    currentUser,
+    logout,
+    theme,
+    toggleTheme,
+    sidebarOverrides,
+    siteConfig,
+    isMobileSidebarOpen,
+    closeMobileSidebar,
+    kasbon
+  } = usePMS();
 
-  const overdueWoCount = workOrders.filter(w => w.status === 'Overdue').length;
-  const pendingKasbonCount = kasbon.filter(k => k.status.includes('Menunggu')).length;
-  const expiredDocsCount = shipDocuments.filter(d => d.status === 'Expired').length + certificates.filter(c => c.status === 'Expired').length;
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
-  const menuGroups = [
+  const pendingKasbonCount = kasbon ? kasbon.filter(k => (k.status || '').includes('Menunggu')).length : 0;
+
+  const navItems = [
+    { id: 'dashboard', label: 'Dashboard Utama', icon: LayoutDashboard },
+    { id: 'fleet', label: 'Armada Kapal', icon: Ship },
     {
-      groupTitle: 'Armada & Ikhtisar',
-      items: [
-        { key: 'dashboard', label: 'Dashboard Fleet', icon: LayoutDashboard }
-      ]
+      id: 'audit',
+      label: 'Audit & Kepatuhan ISM',
+      icon: ShieldCheck,
+      badge: openNCCount > 0 ? `${openNCCount} NC` : null,
+      badgeType: 'warning'
     },
     {
-      groupTitle: 'Planned Maintenance (PMS)',
-      items: [
-        { key: 'pms-equipment', label: 'Equipment & Jam Kerja', icon: Wrench },
-        {
-          key: 'pms-workorders',
-          label: 'Work Orders',
-          icon: ClipboardList,
-          badge: overdueWoCount > 0 ? `${overdueWoCount} Overdue` : null,
-          badgeVariant: 'danger'
-        }
-      ]
+      id: 'documents',
+      label: 'Sertifikat & Dokumen',
+      icon: FileCheck,
+      badge: expiredDocsCount > 0 ? expiredDocsCount : null,
+      badgeType: 'danger-pulse'
+    },
+    { id: 'equipment', label: 'Equipment & Running Hours', icon: Wrench },
+    {
+      id: 'maintenance',
+      label: 'Planned Maintenance',
+      icon: CalendarClock,
+      badge: overdueWOCount > 0 ? overdueWOCount : null,
+      badgeType: 'danger'
     },
     {
-      groupTitle: 'Logistik & Biaya',
-      items: [
-        { key: 'inventory', label: 'Sparepart & Stok', icon: Package },
-        { key: 'cost-mgmt', label: 'Biaya & Budget', icon: PieChart }
-      ]
+      id: 'spareparts',
+      label: 'Logistik & Suku Cadang',
+      icon: Package,
+      badge: lowStockCount > 0 ? lowStockCount : null,
+      badgeType: 'warning'
+    },
+    { id: 'costs', label: 'Biaya & Anggaran Kapal', icon: DollarSign },
+    { id: 'crew', label: 'Crew & Safe Manning', icon: Users },
+    { id: 'absen', label: 'Presensi Harian Kru', icon: CalendarCheck },
+    {
+      id: 'kasbon',
+      label: 'Sistem Kasbon Kru',
+      icon: WalletCards,
+      badge: pendingKasbonCount > 0 ? `${pendingKasbonCount} Baru` : null,
+      badgeType: 'warning'
+    },
+    { id: 'notifications', label: 'Reminder & WA Bot', icon: BellRing },
+    { id: 'wa-simulator', label: 'WhatsApp Simulator', icon: MessageSquare },
+    { id: 'google-calendar', label: 'Google Calendar Sync', icon: CalendarPlus },
+    { id: 'reports', label: 'Laporan & Ekspor', icon: FileSpreadsheet },
+    {
+      id: 'master',
+      label: 'Data Master (Admin)',
+      icon: Database,
+      badge: 'Admin',
+      badgeType: 'info'
     },
     {
-      groupTitle: 'Manajemen Crew Kapal',
-      items: [
-        { key: 'crew-list', label: 'Master Data Crew', icon: Users },
-        {
-          key: 'crew-absen',
-          label: 'Sistem Absensi (Harian)',
-          icon: CalendarCheck,
-          highlight: true
-        },
-        {
-          key: 'crew-kasbon',
-          label: 'Sistem Kasbon Crew',
-          icon: WalletCards,
-          badge: pendingKasbonCount > 0 ? `${pendingKasbonCount} Baru` : null,
-          badgeVariant: 'purple',
-          highlight: true
-        },
-        { key: 'crew-certs', label: 'Sertifikat Kompetensi', icon: Award },
-        { key: 'crew-leave', label: 'Cuti & Safety Drill', icon: LifeBuoy }
-      ]
+      id: 'settings',
+      label: 'CMS Tampilan Login',
+      icon: Palette,
+      badge: 'CMS',
+      badgeType: 'info'
     },
     {
-      groupTitle: 'Legalitas & Dokumen',
-      items: [
-        {
-          key: 'ship-docs',
-          label: 'Surat & Dokumen Kapal',
-          icon: FileText,
-          badge: expiredDocsCount > 0 ? `${expiredDocsCount} Exp` : null,
-          badgeVariant: 'danger'
-        }
-      ]
-    },
-    {
-      groupTitle: 'Notifikasi & Kalender',
-      items: [
-        { key: 'google-calendar', label: 'Google Calendar Sync', icon: CalendarPlus, highlight: true },
-        { key: 'wa-simulator', label: 'WhatsApp Simulator', icon: MessageSquare },
-        { key: 'notifications', label: 'Log Reminder Terkirim', icon: BellRing }
-      ]
-    },
-    {
-      groupTitle: 'Pengaturan & Akun',
-      items: [
-        { key: 'profile-settings', label: 'Pengaturan Profil', icon: UserCog },
-        { key: 'menu-login', label: 'Menu Login / Ganti Akun', icon: LogIn }
-      ]
+      id: 'sidebar_management',
+      label: 'Manajemen Sidebar',
+      icon: Shield,
+      badge: 'RBAC',
+      badgeType: 'warning'
     }
   ];
 
+  // Use sidebar overrides for access filtering
+  const filteredNavItems = navItems.filter(item => hasAccessWithOverrides(currentRole, item.id, sidebarOverrides));
+
   return (
     <>
-      {/* Mobile Drawer Backdrop Overlay */}
-      {isMobileMenuOpen && (
-        <div
-          className="sidebar-backdrop"
-          onClick={() => setIsMobileMenuOpen(false)}
-          aria-label="Tutup menu samping"
-        />
-      )}
+      {/* Mobile Drawer Backdrop */}
+      <div
+        className={`sidebar-backdrop ${isMobileSidebarOpen ? 'active' : ''}`}
+        onClick={closeMobileSidebar}
+        aria-hidden="true"
+      />
 
-      <aside className={`sidebar ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
+      <aside className={`sidebar-container ${isMobileSidebarOpen ? 'open' : ''}`}>
         {/* Brand Header */}
-        <div className="sidebar-header">
-          <div className="brand-icon-box" style={{ background: '#ffffff', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px', boxShadow: '0 2px 6px rgba(15,23,42,0.06)' }}>
-            <img src={logoAt} alt="AT Logo" style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
+        <div style={{
+          padding: '1.25rem 1.15rem',
+          borderBottom: '1px solid var(--border-subtle)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '0.75rem',
+          flexShrink: 0
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '10px',
+              background: theme === 'light' ? '#f0f9ff' : 'rgba(255, 255, 255, 0.08)',
+              border: theme === 'light' ? '1px solid #bae6fd' : '1px solid rgba(255, 255, 255, 0.15)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: theme === 'light' ? '0 2px 8px rgba(2, 132, 199, 0.15)' : '0 4px 12px rgba(0, 0, 0, 0.3)',
+              padding: '4px',
+              flexShrink: 0
+            }}>
+              <MaritimeEmblem size={26} />
+            </div>
+            <div style={{ minWidth: 0, overflow: 'hidden' }}>
+              <h1 style={{
+                fontSize: '0.94rem',
+                fontWeight: 800,
+                letterSpacing: '-0.02em',
+                color: theme === 'light' ? '#0f172a' : '#ffffff',
+                lineHeight: 1.2,
+                whiteSpace: 'nowrap',
+                textOverflow: 'ellipsis',
+                overflow: 'hidden'
+              }}>
+                {siteConfig?.companyName || siteConfig?.systemTitle || 'SISTEM PMS'}
+              </h1>
+              <p style={{
+                fontSize: '0.66rem',
+                color: theme === 'light' ? '#0284c7' : '#38bdf8',
+                fontWeight: 700,
+                letterSpacing: '0.03em',
+                textTransform: 'uppercase',
+                whiteSpace: 'nowrap',
+                textOverflow: 'ellipsis',
+                overflow: 'hidden'
+              }}>
+                {siteConfig?.companyTagline || siteConfig?.companySubtitle || 'Fleet Management'}
+              </p>
+            </div>
           </div>
-          <div style={{ flex: 1 }}>
-            <div className="brand-title" style={{ fontSize: '0.98rem' }}>SISTEM PMS</div>
-            <div className="brand-subtitle">Fleet Maintenance System</div>
-          </div>
-          {/* Mobile close button */}
+
+          {/* Close button on mobile/tablet */}
           <button
+            onClick={closeMobileSidebar}
+            className="sidebar-close-btn"
+            aria-label="Tutup Menu"
+            title="Tutup Menu"
             type="button"
-            className="mobile-sidebar-close"
-            onClick={() => setIsMobileMenuOpen(false)}
-            aria-label="Tutup menu"
           >
             <X size={20} />
           </button>
         </div>
 
-        {/* Navigation Menus */}
-        <nav className="sidebar-menu">
-          {menuGroups.map((group, gIdx) => (
-            <div key={gIdx}>
-              <div className="menu-group-title">{group.groupTitle}</div>
-              <ul className="menu-list">
-                {group.items.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = activeTab === item.key;
-                  return (
-                    <li key={item.key}>
-                      <button
-                        type="button"
-                        className={`nav-item-btn ${isActive ? 'active' : ''}`}
-                        onClick={() => {
-                          setIsMobileMenuOpen(false);
-                          if (item.key === 'profile-settings') {
-                            setIsProfileModalOpen(true);
-                          } else if (item.key === 'menu-login') {
-                            logout();
-                          } else {
-                            setActiveTab(item.key);
-                          }
-                        }}
-                      style={item.highlight && !isActive ? { borderLeft: '3px solid #0284c7' } : undefined}
-                    >
-                      <Icon className="nav-icon" />
-                      <span>{item.label}</span>
-                      {item.badge && (
-                        <span
-                          className="nav-badge"
-                          style={{
-                            backgroundColor: item.badgeVariant === 'danger' ? '#fff1f2' : '#f5f3ff',
-                            color: item.badgeVariant === 'danger' ? '#e11d48' : '#7c3aed',
-                            border: `1px solid ${item.badgeVariant === 'danger' ? '#fecdd3' : '#ddd6fe'}`
-                          }}
-                        >
-                          {item.badge}
-                        </span>
-                      )}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        ))}
+      {/* Navigation Items (Filtered by Current Role + Sidebar Overrides) */}
+      <nav style={{ padding: '1rem 0.75rem', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: '0.3rem', overflowY: 'auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.4rem 0.6rem' }}>
+          <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-subtle)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+            Menu Navigasi
+          </span>
+          <span className="badge badge-info mono" style={{ fontSize: '0.62rem', padding: '0.1rem 0.45rem' }}>
+            {filteredNavItems.length} Modul
+          </span>
+        </div>
+        {filteredNavItems.map(item => {
+          const Icon = item.icon;
+          const isActive = activeTab === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '0.65rem 0.85rem',
+                borderRadius: '8px',
+                border: 'none',
+                background: isActive
+                  ? (theme === 'light'
+                      ? 'linear-gradient(90deg, rgba(2, 132, 199, 0.12) 0%, rgba(2, 132, 199, 0.04) 100%)'
+                      : 'linear-gradient(90deg, rgba(2, 132, 199, 0.25) 0%, rgba(2, 132, 199, 0.08) 100%)')
+                  : 'transparent',
+                color: isActive ? (theme === 'light' ? '#0284c7' : '#38bdf8') : 'var(--text-muted)',
+                fontWeight: isActive ? 700 : 500,
+                fontSize: '0.86rem',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+                textAlign: 'left',
+                borderLeft: isActive
+                  ? `3px solid ${theme === 'light' ? '#0284c7' : '#38bdf8'}`
+                  : '3px solid transparent'
+              }}
+              onMouseEnter={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.background = theme === 'light' ? '#f1f5f9' : 'rgba(255, 255, 255, 0.04)';
+                  e.currentTarget.style.color = 'var(--text-main)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.color = 'var(--text-muted)';
+                }
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <Icon size={19} color={isActive ? (theme === 'light' ? '#0284c7' : '#38bdf8') : 'currentColor'} />
+                <span>{item.label}</span>
+              </div>
+              {item.badge && (
+                <span className={`badge ${
+                  item.badgeType === 'danger' ? 'badge-danger' :
+                  item.badgeType === 'danger-pulse' ? 'badge-danger-pulse' :
+                  item.badgeType === 'info' ? 'badge-info' :
+                  'badge-warning'
+                }`} style={{ fontSize: '0.68rem', padding: '0.15rem 0.45rem' }}>
+                  {item.badge}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </nav>
 
-      {/* Sidebar Footer with system status */}
-      <div className="sidebar-footer">
-        <div className="system-status-indicator">
-          <span className="pulse-dot" />
-          <span>Sistem Online • Sync Aktif</span>
+      {/* Role Profile Box & Logout */}
+      <div style={{
+        padding: '0.85rem 1rem 1rem',
+        borderTop: '1px solid var(--border-subtle)',
+        background: theme === 'light' ? '#ffffff' : 'rgba(0, 0, 0, 0.2)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.65rem',
+        flexShrink: 0
+      }}>
+        {/* Quick Theme Switcher */}
+        <button
+          onClick={toggleTheme}
+          style={{
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '0.5rem 0.75rem',
+            borderRadius: '8px',
+            border: '1px solid var(--border-subtle)',
+            background: theme === 'light' ? '#f8fafc' : 'rgba(255, 255, 255, 0.04)',
+            color: 'var(--text-main)',
+            cursor: 'pointer',
+            fontSize: '0.78rem',
+            transition: 'all 0.15s ease'
+          }}
+          title="Ganti Mode Terang / Gelap"
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
+            {theme === 'dark' ? <Sun size={15} color="#f59e0b" /> : <Moon size={15} color="#0284c7" />}
+            <span style={{ fontWeight: 500, color: 'var(--text-muted)' }}>Tema Tampilan</span>
+          </div>
+          <span style={{
+            fontSize: '0.7rem',
+            fontWeight: 700,
+            padding: '0.15rem 0.45rem',
+            borderRadius: '4px',
+            background: theme === 'light' ? '#0284c7' : 'rgba(56, 189, 248, 0.2)',
+            color: '#ffffff'
+          }}>
+            {theme === 'dark' ? 'Dark' : 'Light (Putih)'}
+          </span>
+        </button>
+
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0.6rem 0.75rem',
+          borderRadius: '8px',
+          background: theme === 'light' ? '#f8fafc' : 'var(--bg-surface-elevated)',
+          border: '1px solid var(--border-subtle)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', overflow: 'hidden', flex: 1 }}>
+            <div style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              background: ROLE_DEFINITIONS[currentRole]?.color || 'var(--primary)',
+              color: '#fff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: 700,
+              fontSize: '0.8rem',
+              flexShrink: 0,
+              overflow: 'hidden'
+            }}>
+              {currentUser?.avatar ? (
+                <img src={currentUser.avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                <ShieldCheck size={16} />
+              )}
+            </div>
+            <div style={{ overflow: 'hidden' }}>
+              <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-main)', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+                {currentUser?.name ? currentUser.name.split(',')[0] : currentRole}
+              </div>
+              <div style={{ fontSize: '0.7rem', color: theme === 'light' ? '#0284c7' : '#38bdf8', fontWeight: 600, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+                {currentUser?.role || currentRole}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flexShrink: 0 }}>
+            {/* Profile Settings Button */}
+            <button
+              onClick={() => setShowProfileModal(true)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#0284c7',
+                cursor: 'pointer',
+                padding: '0.35rem',
+                borderRadius: '6px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.15s ease'
+              }}
+              title="Pengaturan Profil"
+            >
+              <UserCog size={15} />
+            </button>
+
+            <button
+              onClick={logout}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#ef4444',
+                cursor: 'pointer',
+                padding: '0.35rem',
+                borderRadius: '6px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.15s ease'
+              }}
+              title="Keluar dari sistem"
+            >
+              <LogOut size={15} />
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Profile Settings Modal */}
+      {showProfileModal && (
+        <ProfileSettingsModal onClose={() => setShowProfileModal(false)} />
+      )}
     </aside>
     </>
   );
-}
+};
+

@@ -15,7 +15,7 @@ import {
   Flame,
   FileText
 } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../context/PMSContext';
 import Badge from '../common/Badge';
 import StatCard from '../common/StatCard';
 import { openGoogleCalendarEvent, exportIcsCalendar } from '../../utils/calendarUtils';
