@@ -8,10 +8,10 @@ export const DEFAULT_EMAIL_GATEWAY = {
   provider: 'Backend API',
   apiUrl: '/api/notifications/email',
   apiKey: '',
-  fromName: 'Sistem PMS Armada',
-  fromEmail: 'noreply@pms-maritim.id',
-  replyTo: 'operations@pms-maritim.id',
-  defaultRecipients: ['operations@pms-maritim.id'],
+  fromName: 'PMS Armada Maritim',
+  fromEmail: 'noreply@pms-maritim.com',
+  replyTo: 'fleet.ops@pms-maritim.com',
+  defaultRecipients: ['fleet.ops@pms-maritim.com'],
 };
 
 export const isValidEmail = (email) => {
@@ -37,7 +37,7 @@ export const buildEmailPayload = ({ to, cc, bcc, subject, text, html, meta }) =>
   to: normalizeEmailList(to),
   cc: normalizeEmailList(cc),
   bcc: normalizeEmailList(bcc),
-  subject: String(subject || 'Notifikasi Sistem PMS Armada').slice(0, 200),
+  subject: String(subject || 'Notifikasi PMS Armada Maritim').slice(0, 200),
   text: String(text || ''),
   html: html || undefined,
   meta: meta || {},
@@ -54,7 +54,7 @@ export const sendEmailViaBackend = async (payload, gateway = {}) => {
         ...(gateway?.apiKey ? { Authorization: `Bearer ${gateway.apiKey}` } : {}),
       },
       body: JSON.stringify({
-        from: gateway?.fromEmail ? `${gateway?.fromName || 'Sistem PMS Armada'} <${gateway.fromEmail}>` : undefined,
+        from: gateway?.fromEmail ? `${gateway?.fromName || 'PMS Armada Maritim'} <${gateway.fromEmail}>` : undefined,
         replyTo: gateway?.replyTo || undefined,
         ...payload,
       }),
@@ -84,12 +84,12 @@ export const buildEmailHtml = ({ preheader, title, badge, rows, bodyText, footer
     + `<div style="display:none;max-height:0;overflow:hidden;opacity:0;">${preheader || ''}</div>`
     + `<div style="max-width:640px;margin:0 auto;padding:24px;">`
     + `<div style="background:#0c4a6e;color:#fff;border-radius:12px 12px 0 0;padding:18px 22px;">`
-    + `<div style="font-size:11px;letter-spacing:1px;opacity:.8;">SISTEM MANAJEMEN PEMELIHARAAN KAPAL (PMS)</div>`
+    + `<div style="font-size:11px;letter-spacing:1px;opacity:.8;">SISTEM PMS — OPERATOR ARMADA MARITIM</div>`
     + `<div style="font-size:20px;font-weight:bold;margin-top:4px;">${title || 'Notifikasi'}</div>`
     + (badge ? `<div style="display:inline-block;margin-top:8px;background:#22d3ee;color:#083344;font-size:12px;font-weight:bold;padding:4px 10px;border-radius:999px;">${badge}</div>` : '')
     + `</div><div style="background:#fff;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 12px 12px;padding:20px 22px;">`
     + (rowHtml ? `<table style="border-collapse:collapse;width:100%;margin:0 0 14px 0;">${rowHtml}</table>` : '')
     + `<div style="white-space:pre-line;color:#334155;font-size:13px;line-height:1.6;">${bodyText || ''}</div>`
-    + `<div style="margin-top:16px;padding-top:12px;border-top:1px dashed #cbd5e1;color:#64748b;font-size:11px;">${footer || 'Email otomatis Sistem Planned Maintenance System (PMS) Armada Kapal.'}</div>`
+    + `<div style="margin-top:16px;padding-top:12px;border-top:1px dashed #cbd5e1;color:#64748b;font-size:11px;">${footer || 'Email otomatis Sistem Planned Maintenance System (PMS) Armada Maritim.'}</div>`
     + `</div></div></body></html>`;
 };

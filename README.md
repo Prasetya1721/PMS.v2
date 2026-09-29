@@ -1,73 +1,109 @@
-# PMS.v2 - Sistem Planned Maintenance System (PMS) Kapal & Manajemen Armada Terpadu
+# Dashboard Sistem PMS (Planned Maintenance System) Kapal Enterprise
 
-Dashboard Planned Maintenance System (PMS) berbasis web dengan tema **Light Mode Modern** untuk pengelolaan kelaiklautan armada kapal, monitoring jam kerja mesin (*running hours*), inventaris sparepart, surat kapal statutory, serta modul khusus: **Manajemen Crew**, **Sistem Kasbon Karyawan/Crew**, dan **Sistem Absensi Harian**.
+Sistem terpusat berbasis web untuk manajemen armada kapal niaga, perawatan mesin & suku cadang (*Planned Maintenance System*), kepatuhan dokumen legal kapal (*Statutory Certificates*), sertifikasi awak kapal (*STCW Crew Certificates*), dan bot notifikasi proaktif (*WhatsApp Reminder*).
 
----
-
-## ⚓ Fitur Utama
-
-1. **Dashboard Fleet & Per-Kapal (Light Theme)**:
-   - Monitoring KPI operasional armada secara terpusat atau filter per kapal spesifik (*MV Samudera Perkasa*, *TB Nusantara VII*, *SPOB Barito Star*).
-   - Deteksi otomatis peringatan kritis (Work Order overdue, surat kapal expired, kasbon pending).
-
-2. **Sistem Absensi (Presensi Crew Harian)**:
-   - Pencatatan shift tugas jaga (*Watchkeeping*: Navigasi, Mesin, Daywork).
-   - Status presensi: *Onboard (Hadir)*, *Sakit (Off-duty)*, *Izin*, *Cuti Dinas*.
-   - Pencatatan lokasi posisi koordinat/pelabuhan kapal.
-   - Fitur ekspor rekapitulasi ke format CSV/Excel.
-
-3. **Sistem Kasbon Crew (Cash Advance)**:
-   - Pengajuan pinjaman darurat dengan pilihan skema tenor potong gaji (1x lunas, 2 bln, 3 bln, 6 bln).
-   - Alur persetujuan bertingkat (*Approval Workflow*): Nakhoda ➔ Finance ➔ Pencairan Dana ➔ Lunas.
-   - Histori pemotongan cicilan gaji berkala.
-
-4. **Planned Maintenance System (PMS Inti)**:
-   - Registry mesin kapal (Main Engine, Aux Engine, Pompa Bilge, Steering Gear, OWS).
-   - Update Running Hours harian dengan kalkulasi otomatis status servis (*Normal*, *Due Soon*, *Overdue*).
-   - Instruksi Work Order (WO) dengan checklist interaktif dan progress tracking.
-
-5. **Inventaris Sparepart & Biaya (Cost Management)**:
-   - Minimum Stock Alert suku cadang kritis.
-   - Komparasi anggaran vs realisasi (*Budget vs Actual*) per kapal.
-
-6. **Legalitas Dokumen Kapal & Sertifikat Pelaut (STCW)**:
-   - Monitoring masa berlaku surat kapal (*SMC, DOC, Load Line, Class BKI, IOPP*).
-   - Monitoring sertifikat pelaut (*COC, COP: BST, AFF, SCRB, MEFA, MCU*).
-   - Pratinjau arsip scan digital dokumen resmi.
-
-7. **Simulator WhatsApp Business API & Audit Trail**:
-   - Preview pesan reminder resmi ke WhatsApp smartphone crew/admin.
-   - Uji coba pengiriman real-time dan log audit notifikasi terkirim.
-
-8. **Integrasi & Notifikasi Google Calendar**:
-   - Sinkronisasi satu-klik jadwal perawatan mesin (WO), jatuh tempo surat kapal, dan sertifikat pelaut langsung ke Google Calendar smartphone/desktop.
-   - Pengingat otomatis terkonfigurasi (Pop-up notifikasi H-1 dan email H-7 sebelum jatuh tempo).
-   - Ekspor kalender universal `.ICS` (kompatibel dengan Google Calendar, Outlook, Apple Calendar).
+Aplikasi ini dibangun ulang dari awal sesuai spesifikasi komprehensif pada [prd.md](prd.md).
 
 ---
 
-## 🚀 Menjalankan Aplikasi Secara Lokal
+## Fitur Utama Sesuai PRD
 
-### Prasyarat
-- Node.js (v18 ke atas)
-- NPM
+1. **Dashboard Fleet & Multi-Kapal**:
+   - Tampilan agregat armada (*Fleet Overview*) dan dashboard spesifik per kapal (*KM Nusantara Express*, *TB Baruna Perkasa*, *KM Samudera Sejahtera*).
+   - Indikator KPI Kepatuhan Maintenance (Compliance Score), radar masa berlaku dokumen, dan pelacak running hours.
 
-### Instalasi & Menjalankan Dev Server
+2. **Master Equipment & Running Hours (Jam Kerja Mesin)**:
+   - Pelacakan jam operasi mesin utama, generator/aux engine, kompresor, pompa ballast, crane, dan radar.
+   - Ambang batas servis otomatis: *Normal*, *Due Soon* (mendekati servis), dan *Overdue* (melewati jam servis).
+   - Modal pencatatan running hours harian/per pelayaran.
+
+3. **Planned Maintenance System (Core PMS)**:
+   - Penjadwalan perawatan berbasis **running hours** (250h, 500h, 1000h, 5000h) dan **interval kalender** (bulanan, kuartalan, 5-tahunan docking).
+   - Work Orders lifecycle (*Scheduled -> In Progress -> Completed / Sign-Off*).
+   - Checklist interaktif teknisi, alokasi suku cadang terpakai, dan estimasi biaya perbaikan.
+
+4. **Suku Cadang & Manajemen Inventaris**:
+   - Master sparepart terhubung dengan nomor seri equipment.
+   - Peringatan batas minimum stok (*Low Stock* & *Critical Alert*).
+   - Pengajuan pembelian barang (*Purchase Requisition*) dan tracking PO armada.
+
+5. **Manajemen Biaya & Anggaran (Cost Management)**:
+   - Analisis *Budget vs Actual* per kapal dan per kategori biaya (sparepart, jasa teknisi, docking).
+   - Visualisasi penyerapan anggaran dan variance surplus/defisit.
+
+6. **Awak Kapal (Crew Management)**:
+   - Biodata kru per kapal, jabatan (*Master, C/E, Officers, Ratings*), dan buku pelaut.
+   - Pencatatan kehadiran (Attendance Onboard / Offboard).
+   - Pengajuan cuti & persetujuan berjenjang (Nakhoda -> Fleet Manager).
+   - Riwayat latihan keselamatan kapal (*Safety Drills: Fire Drill, Abandon Ship, Man Overboard*).
+
+7. **Radar Dokumen Legal & Sertifikat STCW**:
+   - Status visual otomatis: **Aktif (Hijau)**, **Mendekati Expired (Kuning/Oranye)**, **Expired (Merah)**.
+   - Sertifikat Kru: COC (ANT/ATT), COP (BST, AFF), Medical Fitness Certificate.
+   - Surat Legal Kapal: SMC (ISM Code), Class Hull & Machinery BKI/ClassNK, Safety Equipment, P&I Club.
+   - Pratinjau dokumen scan sertifikat resmi dengan verifikasi QR & stempel.
+
+8. **Pusat Notifikasi, WhatsApp Reminder Bot & Google Calendar Sync**:
+   - **Otomatisasi Rentang 1 Bulan (H-30)**: Deteksi proaktif dokumen & sertifikat kru yang akan jatuh tempo dalam 30 hari ke depan.
+   - **Integrasi Google Calendar**: 1-klik penjadwalan event alarm langsung ke Google Calendar Web dan tombol unduh sinkronisasi massal `.ics` (kompatibel Google Calendar, Outlook, Apple iCal).
+   - **WhatsApp Reminder Bot**: Generator pesan peringatan resmi maritim dengan tautan langsung kirim ke nakhoda, kepala kamar mesin, atau kru bersangkutan.
+   - Konfigurasi ambang batas pengingat otomatis: **H-90, H-60, H-30, H-14, H-7, H-1** dengan alur eskalasi pimpinan armada.
+   - Log audit seluruh riwayat pengiriman notifikasi (*Delivered / Escalated / G-Cal Sync*).
+
+9. **Laporan & Ekspor Data**:
+   - Ekspor lembar kerja CSV / Excel instan untuk Work Orders, Dokumen, Biaya, dan Sparepart.
+   - Tata letak cetak ramah dokumen (Print / PDF Ready) lengkap dengan kolom tanda tangan pimpinan armada.
+
+10. **Role-Based Access Control (RBAC)**:
+    - Pengujian interaktif multi-peran: *Super Admin, Fleet Manager, Admin Kapal / Nakhoda, Teknisi / Chief Engineer, Crew / ABK, HR / Personalia, Finance*.
+
+---
+
+## Teknologi & Arsitektur
+
+- **Frontend**: React 18, Vite 5, Modern CSS Maritime Cockpit Design Tokens, Lucide Icons, Canvas Confetti.
+- **State Management**: Reactive React Context dengan sinkronisasi otomatis ke `localStorage` (dapat langsung digunakan tanpa setup server terpisah).
+- **Hosting / Deployment**: Zero-config Vite build (`dist`), kompatibel langsung dengan Vercel SPA atau web server apa pun.
+
+---
+
+## Panduan Menjalankan Aplikasi
+
+### 1. Menjalankan di Komputer Lokal (Development)
+
 ```bash
-# Clone repository
-git clone https://github.com/Prasetya1721/PMS.v2.git
-cd PMS.v2
-
-# Install dependencies
+# Pastikan dependensi terpasang
 npm install
 
-# Jalankan server development
+# Jalankan Vite dev server
 npm run dev
 ```
 
-Aplikasi dapat diakses melalui browser di `http://localhost:5173/`.
+Buka browser di `http://localhost:3000`.
 
-### Build Produksi
+### 2. Membangun untuk Produksi (Production Build)
+
 ```bash
 npm run build
 ```
+
+Hasil build akan otomatis tersedia di folder `dist/`. Anda dapat mengujinya dengan:
+```bash
+npm run preview
+```
+
+### 3. Deploy ke Vercel
+
+Repository ini telah dilengkapi dengan `vercel.json` standar:
+```json
+{
+  "framework": "vite",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
+```
+Cukup push repository ini ke GitHub / GitLab dan hubungkan ke akun Vercel Anda. Vercel akan otomatis mendeteksi framework **Vite** dan menyajikan aplikasi dengan performa maksimal.

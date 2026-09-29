@@ -1,6 +1,6 @@
 /**
  * Maritime ISM Code Audit Time Range Utilities
- * Planned Maintenance System (PMS) & Safety Management System (SMS)
+ * Sistem Manajemen Keselamatan Maritim (ISM Code)
  */
 
 /**

@@ -14,7 +14,7 @@ import {
 import { calculateNCRange } from '../../utils/auditTimeUtils';
 
 export const AuditNotificationModal = ({ finding, onClose }) => {
-  const { siteConfig, vessels, sendAuditWhatsAppNotification, sendAuditEmailNotification, showToast, theme } = usePMS();
+  const { vessels, sendAuditWhatsAppNotification, sendAuditEmailNotification, showToast, theme } = usePMS();
 
   if (!finding) return null;
 
@@ -24,7 +24,7 @@ export const AuditNotificationModal = ({ finding, onClose }) => {
   const ncRange = useMemo(() => calculateNCRange(finding), [finding]);
 
   const vessel = vessels.find(v => v.id === finding.vesselId);
-  const vesselName = finding.targetName || vessel?.name || `Kantor Pusat ${siteConfig?.companyName || siteConfig?.systemTitle || 'Perusahaan'}`;
+  const vesselName = finding.targetName || vessel?.name || 'Kantor Pusat Perusahaan';
 
   // Available maritime recipients with both phone and email
   const recipientPresets = useMemo(() => [
@@ -33,28 +33,28 @@ export const AuditNotificationModal = ({ finding, onClose }) => {
       label: `Nakhoda (${vessel?.masterCaptain || 'Capt. Nakhoda'})`,
       role: 'Nakhoda Kapal',
       phone: '6281234567890',
-      email: 'nakhoda@pms-maritim.id'
+      email: 'nakhoda@pms-maritim.com'
     },
     {
       id: 'kkm',
       label: `KKM / Chief Engineer (${vessel?.chiefEngineer || 'KKM Mesin'})`,
       role: 'Kepala Kamar Mesin (KKM)',
       phone: '6281298765432',
-      email: 'kkm@pms-maritim.id'
+      email: 'kkm@pms-maritim.com'
     },
     {
       id: 'dpa',
-      label: 'DPA & Marine Superintendent',
+      label: 'DPA & Marine Superintendent (Pontianak)',
       role: 'Designated Person Ashore (DPA)',
       phone: '6281288991122',
-      email: 'dpa@pms-maritim.id'
+      email: 'dpa@pms-maritim.com'
     },
     {
       id: 'pic',
       label: `PIC Penanggung Jawab (${finding.assignedTo || 'PIC Terkait'})`,
       role: finding.assignedTo || 'PIC Penanggung Jawab',
       phone: '6281344556677',
-      email: 'operations@pms-maritim.id'
+      email: 'operations@pms-maritim.com'
     },
     {
       id: 'custom',
@@ -77,7 +77,7 @@ export const AuditNotificationModal = ({ finding, onClose }) => {
       return {
         role: customRecipientName.trim() || 'Penerima Khusus',
         phone: customPhone.trim() || '6281200000000',
-        email: customEmail.trim() || 'fleet.ops@pms-maritim.id'
+        email: customEmail.trim() || 'fleet.ops@pms-maritim.com'
       };
     }
     const found = recipientPresets.find(p => p.id === selectedRecipientId);
@@ -88,7 +88,7 @@ export const AuditNotificationModal = ({ finding, onClose }) => {
   const generatedMessage = useMemo(() => {
     if (isClosed) {
       return `*✅ NOTIFIKASI PENUTUPAN TEMUAN AUDIT (NC CLOSE)*\n` +
-        `_${siteConfig?.companyName || siteConfig?.systemTitle || 'Sistem PMS Maritim'} - Sistem PMS & SMS_\n\n` +
+        `_Sistem PMS Armada Maritim - SMS_\n\n` +
         `Kepada Yth: *${activeRecipient.role}*\n` +
         `Kapal / Entitas: *${vesselName}*\n` +
         `No. Temuan: *${finding.findingNo}* [${finding.category}]\n` +
@@ -102,7 +102,7 @@ export const AuditNotificationModal = ({ finding, onClose }) => {
         `• Tanggal Ditutup Resmi: *${ncRange?.closedDateStr || 'Hari ini'}*\n` +
         `• Durasi Penyelesaian: *${ncRange?.resolutionDays || 1} Hari* (${ncRange?.varianceText || 'Tepat Waktu'})\n\n` +
         `Status Kepatuhan: *100% COMPLIANT (IMO ISM CODE & BKI)*\n\n` +
-        `_Pusat Pengendali Kepatuhan ${siteConfig?.companyName || siteConfig?.systemTitle || 'Armada Pelayaran'}_`;
+        `_Pusat Pengendali Kepatuhan Armada Maritim_`;
     } else {
       const lateInfo = ncRange?.isOverdue
         ? `🚨 STATUS: MELEWATI BATAS WAKTU (${Math.abs(ncRange.remainingDays)} Hari Overdue)!`
@@ -111,7 +111,7 @@ export const AuditNotificationModal = ({ finding, onClose }) => {
       const subStatus = isSubmitted ? '(Eviden Perbaikan Sedang Ditinjau Auditor)' : '(Wajib Pengajuan CAP & Eviden)';
 
       return `*🚨 NOTIFIKASI TEMUAN AUDIT ISM CODE (NC OPEN)*\n` +
-        `_${siteConfig?.companyName || siteConfig?.systemTitle || 'Sistem PMS Maritim'} - Sistem PMS & SMS_\n\n` +
+        `_Sistem PMS Armada Maritim - SMS_\n\n` +
         `Kepada Yth: *${activeRecipient.role}*\n` +
         `Kapal / Entitas: *${vesselName}*\n` +
         `No. Temuan: *${finding.findingNo}* [${finding.category}] ${subStatus}\n` +
@@ -123,10 +123,10 @@ export const AuditNotificationModal = ({ finding, onClose }) => {
         `• Target Batas Akhir: *${ncRange?.dueDateStr || finding.dueDate}*\n` +
         `• ${lateInfo}\n\n` +
         `*TINDAKAN DIPERLUKAN:*\n` +
-        `Nakhoda & KKM wajib memastikan tindakan korektif dilaksanakan dan dokumen/foto eviden diunggah ke Portal ${siteConfig?.systemTitle || 'PMS Armada'} sebelum batas waktu berakhir.\n\n` +
-        `_Pusat Pengendali Kepatuhan ${siteConfig?.companyName || siteConfig?.systemTitle || 'Armada Pelayaran'}_`;
+        `Nakhoda & KKM wajib memastikan tindakan korektif dilaksanakan dan dokumen/foto eviden diunggah ke Portal PMS Armada sebelum batas waktu berakhir.\n\n` +
+        `_Pusat Pengendali Kepatuhan Armada Maritim_`;
     }
-  }, [isClosed, isSubmitted, activeRecipient, vesselName, finding, ncRange, siteConfig]);
+  }, [isClosed, isSubmitted, activeRecipient, vesselName, finding, ncRange]);
 
   // Formatted Email Subject & Message for ISM NC
   const generatedEmailSubject = useMemo(() => {
@@ -139,7 +139,7 @@ export const AuditNotificationModal = ({ finding, onClose }) => {
   const generatedEmailMessage = useMemo(() => {
     if (isClosed) {
       return `Kepada Yth: ${activeRecipient.role}\n` +
-        `${siteConfig?.companyName || siteConfig?.systemTitle || 'Sistem PMS Maritim'} - Sistem PMS & SMS\n\n` +
+        `Sistem PMS Armada Maritim - SMS\n\n` +
         `Dengan hormat,\n\n` +
         `Bersama surat elektronik ini, diberitahukan bahwa temuan audit ISM Code berikut telah dinyatakan NC CLOSE (TUNTAS):\n\n` +
         `• No. Temuan: ${finding.findingNo} [${finding.category}]\n` +
@@ -153,8 +153,8 @@ export const AuditNotificationModal = ({ finding, onClose }) => {
         `HASIL VERIFIKASI & CLOSING:\n` +
         `Tindakan koreksi dan dokumen eviden perbaikan telah diverifikasi efektif oleh Lead Auditor DPA / Surveyor BKI. Status temuan resmi dinyatakan NC CLOSE.\n\n` +
         `Status Kepatuhan: 100% COMPLIANT (IMO ISM CODE & BKI)\n\n` +
-        `Pusat Pengendali Kepatuhan ${siteConfig?.companyName || siteConfig?.systemTitle || 'Armada Pelayaran'}\n` +
-        `${siteConfig?.officeAddress || 'Kantor Operasional Pelayaran Maritim'}`;
+        `Pusat Pengendali Kepatuhan Armada Maritim\n` +
+        `Divisi Keselamatan Pelayaran & Kepatuhan ISM Code`;
     } else {
       const lateInfo = ncRange?.isOverdue
         ? `STATUS: MELEWATI BATAS WAKTU (${Math.abs(ncRange.remainingDays)} Hari Overdue)!`
@@ -163,7 +163,7 @@ export const AuditNotificationModal = ({ finding, onClose }) => {
       const subStatus = isSubmitted ? '(Eviden Perbaikan Sedang Ditinjau Auditor)' : '(Wajib Pengajuan CAP & Eviden)';
 
       return `Kepada Yth: ${activeRecipient.role}\n` +
-        `${siteConfig?.companyName || siteConfig?.systemTitle || 'Sistem PMS Maritim'} - Sistem PMS & SMS\n\n` +
+        `Sistem PMS Armada Maritim - SMS\n\n` +
         `Dengan hormat,\n\n` +
         `Diberitahukan bahwa terdapat temuan audit ISM Code (Non-Conformity) yang memerlukan tindakan korektif (CAP):\n\n` +
         `• No. Temuan: ${finding.findingNo} [${finding.category}] ${subStatus}\n` +
@@ -177,11 +177,11 @@ export const AuditNotificationModal = ({ finding, onClose }) => {
         `• Target Batas Akhir: ${ncRange?.dueDateStr || finding.dueDate}\n` +
         `• ${lateInfo}\n\n` +
         `TINDAKAN DIPERLUKAN:\n` +
-        `Nakhoda & KKM wajib memastikan tindakan korektif dilaksanakan dan dokumen/foto eviden diunggah ke Portal ${siteConfig?.systemTitle || 'PMS Armada'} sebelum batas waktu berakhir.\n\n` +
-        `Pusat Pengendali Kepatuhan ${siteConfig?.companyName || siteConfig?.systemTitle || 'Armada Pelayaran'}\n` +
-        `${siteConfig?.officeAddress || 'Kantor Operasional Pelayaran Maritim'}`;
+        `Nakhoda & KKM wajib memastikan tindakan korektif dilaksanakan dan dokumen/foto eviden diunggah ke Portal PMS Armada sebelum batas waktu berakhir.\n\n` +
+        `Pusat Pengendali Kepatuhan Armada Maritim\n` +
+        `Divisi Keselamatan Pelayaran & Kepatuhan ISM Code`;
     }
-  }, [isClosed, isSubmitted, activeRecipient, vesselName, finding, ncRange, siteConfig]);
+  }, [isClosed, isSubmitted, activeRecipient, vesselName, finding, ncRange]);
 
   const handleCopy = () => {
     const textToCopy = selectedChannel === 'whatsapp' ? generatedMessage : `${generatedEmailSubject}\n\n${generatedEmailMessage}`;
@@ -370,7 +370,7 @@ export const AuditNotificationModal = ({ finding, onClose }) => {
                 {selectedChannel === 'email' ? (
                   <input
                     type="email"
-                    placeholder="Email (cth: superintendent@pms-maritim.id)"
+                    placeholder="Email (cth: superintendent@pms-maritim.com)"
                     value={customEmail}
                     onChange={(e) => setCustomEmail(e.target.value)}
                     className="input-control mono"

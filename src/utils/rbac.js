@@ -1,4 +1,4 @@
-// Role-Based Access Control (RBAC) Configuration - Planned Maintenance System (PMS)
+// Role-Based Access Control (RBAC) Configuration for Maritime PMS Enterprise
 
 export const ROLE_DEFINITIONS = {
   'Super Admin': {
@@ -18,7 +18,7 @@ export const ROLE_DEFINITIONS = {
   'Admin Kapal / Nakhoda': {
     label: 'Admin Kapal / Nakhoda',
     shortLabel: 'Nakhoda',
-    description: 'Pengendali operasional kapal armada, kru pelaut, keselamatan pelayaran, dan sertifikat legalitas',
+    description: 'Pengendali operasional kapal KM. RP 2020, kru pelaut, keselamatan pelayaran, dan sertifikat legalitas',
     badgeClass: 'badge-primary',
     color: '#0284c7',
   },
@@ -65,11 +65,7 @@ export const ROLE_PERMISSIONS = {
     'spareparts',
     'costs',
     'crew',
-    'absen',
-    'kasbon',
     'notifications',
-    'wa-simulator',
-    'google-calendar',
     'reports',
     'master',
     'settings',
@@ -85,11 +81,7 @@ export const ROLE_PERMISSIONS = {
     'spareparts',
     'costs',
     'crew',
-    'absen',
-    'kasbon',
     'notifications',
-    'wa-simulator',
-    'google-calendar',
     'reports',
   ],
   'Admin Kapal / Nakhoda': [
@@ -101,10 +93,7 @@ export const ROLE_PERMISSIONS = {
     'maintenance',
     'spareparts',
     'crew',
-    'absen',
-    'kasbon',
     'notifications',
-    'google-calendar',
     'reports',
   ],
   'Teknisi / Chief Engineer': [
@@ -113,8 +102,6 @@ export const ROLE_PERMISSIONS = {
     'maintenance',
     'spareparts',
     'audit',
-    'absen',
-    'google-calendar',
     'reports',
   ],
   'Crew / ABK': [
@@ -123,24 +110,17 @@ export const ROLE_PERMISSIONS = {
     'spareparts',
     'crew',
     'documents',
-    'absen',
-    'kasbon',
   ],
   'HR / Personalia': [
     'dashboard',
     'crew',
-    'absen',
-    'kasbon',
     'documents',
     'notifications',
-    'wa-simulator',
-    'google-calendar',
     'reports',
   ],
   'Finance': [
     'dashboard',
     'costs',
-    'kasbon',
     'spareparts',
     'maintenance',
     'reports',
@@ -156,8 +136,9 @@ export const ROLE_PERMISSIONS = {
 export const hasAccess = (role, moduleId) => {
   if (!role) return false;
   if (role === 'Super Admin') return true;
+  const baseModule = moduleId.startsWith('audit_') ? 'audit' : moduleId;
   const allowed = ROLE_PERMISSIONS[role] || [];
-  return allowed.includes(moduleId);
+  return allowed.includes(moduleId) || allowed.includes(baseModule);
 };
 
 /**
@@ -170,13 +151,14 @@ export const hasAccess = (role, moduleId) => {
 export const hasAccessWithOverrides = (role, moduleId, sidebarOverrides) => {
   if (!role) return false;
   if (role === 'Super Admin') return true;
+  const baseModule = moduleId.startsWith('audit_') ? 'audit' : moduleId;
   // If overrides exist for this role, use them instead of default
   if (sidebarOverrides && sidebarOverrides[role] && Array.isArray(sidebarOverrides[role])) {
-    return sidebarOverrides[role].includes(moduleId);
+    return sidebarOverrides[role].includes(moduleId) || sidebarOverrides[role].includes(baseModule);
   }
   // Fallback to default RBAC
   const allowed = ROLE_PERMISSIONS[role] || [];
-  return allowed.includes(moduleId);
+  return allowed.includes(moduleId) || allowed.includes(baseModule);
 };
 
 /**
@@ -220,11 +202,20 @@ export const canPerformAction = (role, action) => {
     case 'manage_bot_gateway':
       return role === 'Super Admin' || role === 'Fleet Manager';
 
+    case 'create_audit_session':
+    case 'delete_audit_session':
     case 'create_audit_finding':
+    case 'delete_audit_finding':
+    case 'evaluate_audit_checklist':
+    case 'strike_audit_clause':
     case 'close_audit_nc':
-      return role === 'Super Admin' || role === 'Fleet Manager' || role === 'Admin Kapal / Nakhoda';
+    case 'reopen_audit_nc':
+    case 'access_doc_audit':
+      // Wewenang khusus DPA / Lead Auditor / Manajemen Darat
+      return role === 'Super Admin' || role === 'Fleet Manager';
 
     case 'submit_audit_evidence':
+      // Auditee (Nakhoda, KKM, DPA, Admin) berhak mengirimkan bukti perbaikan fisik/dokumen
       return role === 'Super Admin' || role === 'Fleet Manager' || role === 'Admin Kapal / Nakhoda' || role === 'Teknisi / Chief Engineer';
 
     case 'create_work_order':

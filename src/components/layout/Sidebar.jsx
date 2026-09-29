@@ -15,6 +15,9 @@ import {
   BellRing,
   FileSpreadsheet,
   ShieldCheck,
+  Building2,
+  ChevronDown,
+  ChevronRight,
   LogOut,
   Sun,
   Moon,
@@ -22,11 +25,7 @@ import {
   UserCog,
   Palette,
   Shield,
-  X,
-  CalendarCheck,
-  WalletCards,
-  MessageSquare,
-  CalendarPlus
+  X
 } from 'lucide-react';
 
 export const Sidebar = () => {
@@ -38,6 +37,8 @@ export const Sidebar = () => {
     expiredDocsCount,
     lowStockCount,
     openNCCount,
+    smcOpenNCCount,
+    docOpenNCCount,
     currentUser,
     logout,
     theme,
@@ -45,13 +46,11 @@ export const Sidebar = () => {
     sidebarOverrides,
     siteConfig,
     isMobileSidebarOpen,
-    closeMobileSidebar,
-    kasbon
+    closeMobileSidebar
   } = usePMS();
 
   const [showProfileModal, setShowProfileModal] = useState(false);
-
-  const pendingKasbonCount = kasbon ? kasbon.filter(k => (k.status || '').includes('Menunggu')).length : 0;
+  const [auditSubmenuOpen, setAuditSubmenuOpen] = useState(true);
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard Utama', icon: LayoutDashboard },
@@ -61,7 +60,23 @@ export const Sidebar = () => {
       label: 'Audit & Kepatuhan ISM',
       icon: ShieldCheck,
       badge: openNCCount > 0 ? `${openNCCount} NC` : null,
-      badgeType: 'warning'
+      badgeType: 'warning',
+      subItems: [
+        {
+          id: 'audit_smc',
+          label: 'Audit SMC Kapal',
+          icon: Ship,
+          badge: smcOpenNCCount > 0 ? `${smcOpenNCCount} NC` : null,
+          badgeType: 'warning'
+        },
+        {
+          id: 'audit_doc',
+          label: 'Audit DOC Kantor',
+          icon: Building2,
+          badge: docOpenNCCount > 0 ? `${docOpenNCCount} NC` : null,
+          badgeType: 'info'
+        }
+      ]
     },
     {
       id: 'documents',
@@ -86,18 +101,8 @@ export const Sidebar = () => {
       badgeType: 'warning'
     },
     { id: 'costs', label: 'Biaya & Anggaran Kapal', icon: DollarSign },
-    { id: 'crew', label: 'Crew & Safe Manning', icon: Users },
-    { id: 'absen', label: 'Presensi Harian Kru', icon: CalendarCheck },
-    {
-      id: 'kasbon',
-      label: 'Sistem Kasbon Kru',
-      icon: WalletCards,
-      badge: pendingKasbonCount > 0 ? `${pendingKasbonCount} Baru` : null,
-      badgeType: 'warning'
-    },
+    { id: 'crew', label: 'Crew & Kehadiran', icon: Users },
     { id: 'notifications', label: 'Reminder & WA Bot', icon: BellRing },
-    { id: 'wa-simulator', label: 'WhatsApp Simulator', icon: MessageSquare },
-    { id: 'google-calendar', label: 'Google Calendar Sync', icon: CalendarPlus },
     { id: 'reports', label: 'Laporan & Ekspor', icon: FileSpreadsheet },
     {
       id: 'master',
@@ -184,7 +189,7 @@ export const Sidebar = () => {
                 textOverflow: 'ellipsis',
                 overflow: 'hidden'
               }}>
-                {siteConfig?.companyTagline || siteConfig?.companySubtitle || 'Fleet Management'}
+                {siteConfig?.companyTagline || 'Armada Maritim'}
               </p>
             </div>
           </div>
@@ -213,7 +218,152 @@ export const Sidebar = () => {
         </div>
         {filteredNavItems.map(item => {
           const Icon = item.icon;
-          const isActive = activeTab === item.id;
+          const hasSub = Array.isArray(item.subItems) && item.subItems.length > 0;
+          const isSubActive = hasSub && item.subItems.some(sub => activeTab === sub.id);
+          const isActive = activeTab === item.id || isSubActive;
+
+          if (hasSub) {
+            return (
+              <div key={item.id} style={{ display: 'flex', flexDirection: 'column' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab(item.id);
+                    setAuditSubmenuOpen(prev => !prev);
+                  }}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '0.65rem 0.85rem',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: isActive
+                      ? (theme === 'light'
+                          ? 'linear-gradient(90deg, rgba(2, 132, 199, 0.12) 0%, rgba(2, 132, 199, 0.04) 100%)'
+                          : 'linear-gradient(90deg, rgba(2, 132, 199, 0.25) 0%, rgba(2, 132, 199, 0.08) 100%)')
+                      : 'transparent',
+                    color: isActive ? (theme === 'light' ? '#0284c7' : '#38bdf8') : 'var(--text-muted)',
+                    fontWeight: isActive ? 700 : 500,
+                    fontSize: '0.86rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                    textAlign: 'left',
+                    borderLeft: isActive
+                      ? `3px solid ${theme === 'light' ? '#0284c7' : '#38bdf8'}`
+                      : '3px solid transparent'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.background = theme === 'light' ? '#f1f5f9' : 'rgba(255, 255, 255, 0.04)';
+                      e.currentTarget.style.color = 'var(--text-main)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.background = 'transparent';
+                      e.currentTarget.style.color = 'var(--text-muted)';
+                    }
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <Icon size={19} color={isActive ? (theme === 'light' ? '#0284c7' : '#38bdf8') : 'currentColor'} />
+                    <span>{item.label}</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                    {item.badge && (
+                      <span className={`badge ${
+                        item.badgeType === 'danger' ? 'badge-danger' :
+                        item.badgeType === 'danger-pulse' ? 'badge-danger-pulse' :
+                        item.badgeType === 'info' ? 'badge-info' :
+                        'badge-warning'
+                      }`} style={{ fontSize: '0.68rem', padding: '0.15rem 0.45rem' }}>
+                        {item.badge}
+                      </span>
+                    )}
+                    <span style={{ color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', transition: 'transform 0.2s' }}>
+                      {auditSubmenuOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                    </span>
+                  </div>
+                </button>
+
+                {/* Sub Menu Items: DOC & SMC */}
+                {auditSubmenuOpen && (
+                  <div style={{
+                    marginLeft: '1.25rem',
+                    paddingLeft: '0.65rem',
+                    borderLeft: `2px solid ${theme === 'light' ? 'rgba(2, 132, 199, 0.25)' : 'rgba(56, 189, 248, 0.25)'}`,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.2rem',
+                    marginTop: '0.25rem',
+                    marginBottom: '0.35rem'
+                  }}>
+                    {item.subItems.map(sub => {
+                      const SubIcon = sub.icon;
+                      const isCurrentSubActive = activeTab === sub.id;
+                      return (
+                        <button
+                          key={sub.id}
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveTab(sub.id);
+                          }}
+                          style={{
+                            width: '100%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: '0.45rem 0.65rem',
+                            borderRadius: '6px',
+                            border: isCurrentSubActive
+                              ? `1px solid ${theme === 'light' ? '#0284c7' : '#38bdf8'}`
+                              : '1px solid transparent',
+                            background: isCurrentSubActive
+                              ? (theme === 'light' ? '#e0f2fe' : 'rgba(2, 132, 199, 0.25)')
+                              : 'transparent',
+                            color: isCurrentSubActive
+                              ? (theme === 'light' ? '#0369a1' : '#38bdf8')
+                              : 'var(--text-muted)',
+                            fontWeight: isCurrentSubActive ? 800 : 500,
+                            fontSize: '0.8rem',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease',
+                            textAlign: 'left'
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!isCurrentSubActive) {
+                              e.currentTarget.style.background = theme === 'light' ? '#f1f5f9' : 'rgba(255, 255, 255, 0.04)';
+                              e.currentTarget.style.color = 'var(--text-main)';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!isCurrentSubActive) {
+                              e.currentTarget.style.background = 'transparent';
+                              e.currentTarget.style.color = 'var(--text-muted)';
+                            }
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
+                            <SubIcon size={15} color={isCurrentSubActive ? (theme === 'light' ? '#0284c7' : '#38bdf8') : 'currentColor'} />
+                            <span>{sub.label}</span>
+                          </div>
+                          {sub.badge && (
+                            <span className={`badge ${sub.badgeType === 'info' ? 'badge-info' : 'badge-warning'}`} style={{ fontSize: '0.62rem', padding: '0.1rem 0.38rem' }}>
+                              {sub.badge}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          }
+
           return (
             <button
               key={item.id}

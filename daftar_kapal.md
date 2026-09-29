@@ -1,5 +1,5 @@
 # DAFTAR KAPAL - KAPAL
-**PEMILIK:** pt. pelayaran baharimas kalimantan
+**PEMILIK:** ARMADA MARITIM NASIONAL
 
 ---
 

@@ -1,4 +1,5 @@
-// Master Ship Certificates & Document Categorization - Planned Maintenance System (PMS)
+// Master Ship Certificates & Document Categorization
+// Standar Manajemen Armada Kapal Nasional
 // Categories: BKI, Statutory, Asuransi, KSOP, Kesehatan
 
 export const DEMO_CERTIFICATE_CATEGORIES = [

@@ -1,5 +1,4 @@
 // Database Seed Data - Planned Maintenance System (PMS) Demo Preview
-// Single Vessel PMS: RP 2020 (As Owner - No. Reg: 24587)
 // Comprehensive Maritime Technical Specifications, PMS Schedules, Equipment, Crew, and BKI Surveys
 
 import { createDefaultShipParticulars } from './shipParticularsData.js';
@@ -28,6 +27,28 @@ const RAW_INITIAL_VESSELS = [
     "chiefEngineer": "Ir. Bambang Wijaya (KKM)",
     "masterCaptain": "Capt. Hendra Gunawan, M.Mar",
     "photo": "https://images.unsplash.com/photo-1559136555-9303baea8ebd?auto=format&fit=crop&w=800&q=80",
+    "ownershipStatus": "As Owner",
+    "ownershipCategory": "Owner"
+  },
+  {
+    "id": "v-rp2004",
+    "name": "RP 2004",
+    "regNo": "YD 4180",
+    "imo": "1672810",
+    "callSign": "YD 4180",
+    "type": "Other cargo ship (Tugboat Towing Oil Barge)",
+    "flag": "Indonesia (IDN)",
+    "portOfRegistry": "PONTIANAK",
+    "gt": 174,
+    "dwt": 260,
+    "yearBuilt": 2018,
+    "builder": "PT Galangan Kapal Nusantara",
+    "status": "Operasional (Berlayar)",
+    "currentLocation": "PULANG PISAU",
+    "speedKnots": 8.0,
+    "chiefEngineer": "Ir. Syaiful (KKM)",
+    "masterCaptain": "CAPT. EKHSAN (DPA / Master)",
+    "photo": "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=800&q=80",
     "ownershipStatus": "As Owner",
     "ownershipCategory": "Owner"
   }
@@ -567,7 +588,7 @@ export const INITIAL_WORK_ORDERS = [
       },
       {
         "id": "it-405",
-        "name": "Wearpack Pelaut Katun Standar Armada",
+        "name": "Wearpack Pelaut Katun Standar Maritim",
         "qty": 4,
         "unit": "Stel",
         "notes": "APD kru ABK baru naik kapal",
@@ -716,7 +737,7 @@ export const INITIAL_SPAREPARTS = [
   {
     "id": "sp-108",
     "code": "LOG-CRW-WPK01",
-    "name": "Wearpack Katun Pelaut Standar Armada",
+    "name": "Wearpack Katun Pelaut Standar Maritim",
     "equipmentCode": "CRW-PPE",
     "vesselId": "v-001",
     "target": "Crew",
@@ -728,7 +749,7 @@ export const INITIAL_SPAREPARTS = [
     "unit": "Stel",
     "location": "Safety Locker Cabin",
     "unitCost": 285000,
-    "supplier": "CV Maritim Konveksi Safety",
+    "supplier": "CV Mitra Bahari Safety",
     "status": "Normal"
   },
   {
@@ -801,7 +822,7 @@ export const INITIAL_REQUISITIONS = [
       },
       {
         "partId": "sp-108",
-        "name": "Wearpack Katun Pelaut Standar Armada",
+        "name": "Wearpack Katun Pelaut Standar Maritim",
         "qty": 2,
         "unit": "Stel",
         "estimatedUnitCost": 285000,
@@ -1492,10 +1513,10 @@ export const INITIAL_NOTIFICATION_SETTINGS = {
       "provider": "Backend API",
       "apiUrl": "/api/notifications/email",
       "apiKey": "",
-      "fromName": "Sistem PMS Armada",
-      "fromEmail": "noreply@pms-maritim.id",
-      "replyTo": "operations@pms-maritim.id",
-      "defaultRecipients": ["operations@pms-maritim.id"]
+      "fromName": "PMS Armada Maritim",
+      "fromEmail": "noreply@pms-maritim.com",
+      "replyTo": "fleet.ops@pms-maritim.com",
+      "defaultRecipients": ["fleet.ops@pms-maritim.com"]
     },
     "lastRunDate": ""
   },
@@ -1546,7 +1567,7 @@ export const INITIAL_USERS = [
   {
     "id": "u-1",
     "name": "Capt. Robert Sitorus, M.Mar",
-    "email": "admin@pms-maritim.id",
+    "email": "admin@pms-maritim.com",
     "password": "123",
     "role": "Super Admin",
     "title": "Head of Fleet Operations",
@@ -1556,17 +1577,17 @@ export const INITIAL_USERS = [
   {
     "id": "u-2",
     "name": "Ir. H. Gunawan, M.T",
-    "email": "fleet.ops@pms-maritim.id",
+    "email": "fleet.ops@pms-maritim.com",
     "password": "123",
     "role": "Fleet Manager",
-    "title": "General Manager Armada",
+    "title": "General Manager Operasional Armada",
     "shipAccess": "All",
     "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80"
   },
   {
     "id": "u-3",
     "name": "Capt. Hendra Gunawan, M.Mar",
-    "email": "nakhoda@pms-maritim.id",
+    "email": "nakhoda@pms-maritim.com",
     "password": "123",
     "role": "Admin Kapal / Nakhoda",
     "title": "Nakhoda RP 2020",
@@ -1576,7 +1597,7 @@ export const INITIAL_USERS = [
   {
     "id": "u-4",
     "name": "Ir. Bambang Wijaya (KKM)",
-    "email": "kkm@pms-maritim.id",
+    "email": "kkm@pms-maritim.com",
     "password": "123",
     "role": "Teknisi / Chief Engineer",
     "title": "Chief Engineer (KKM) RP 2020",
@@ -1586,7 +1607,7 @@ export const INITIAL_USERS = [
   {
     "id": "u-5",
     "name": "Suryadi Pratama",
-    "email": "abk@pms-maritim.id",
+    "email": "abk@pms-maritim.com",
     "password": "123",
     "role": "Crew / ABK",
     "title": "Juru Mudi / ABK RP 2020",
@@ -1596,7 +1617,7 @@ export const INITIAL_USERS = [
   {
     "id": "u-6",
     "name": "Siti Rahmawati, S.Psi",
-    "email": "hr@pms-maritim.id",
+    "email": "hr@pms-maritim.com",
     "password": "123",
     "role": "HR / Personalia",
     "title": "Crewing & STCW Compliance",
@@ -1606,7 +1627,7 @@ export const INITIAL_USERS = [
   {
     "id": "u-7",
     "name": "Michael Chandra, SE",
-    "email": "finance@pms-maritim.id",
+    "email": "finance@pms-maritim.com",
     "password": "123",
     "role": "Finance",
     "title": "Finance & Logistics Purchasing",

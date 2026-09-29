@@ -229,7 +229,7 @@ export const ProfileSettingsModal = ({ onClose }) => {
             <label style={labelStyle}>Email</label>
             <div style={{ position: 'relative' }}>
               <Mail size={16} color="var(--text-subtle)" style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }} />
-              <input style={inputStyle} type="email" value={formData.email} onChange={e => setFormData(p => ({ ...p, email: e.target.value }))} placeholder="email@pms-maritim.id" />
+              <input style={inputStyle} type="email" value={formData.email} onChange={e => setFormData(p => ({ ...p, email: e.target.value }))} placeholder="email@pms-maritim.com" />
             </div>
           </div>
 

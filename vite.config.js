@@ -1,22 +1,20 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  server: {
-    port: 5173,
-    host: true,
-  },
+  server: { port: 3000, open: false, host: true },
   build: {
     outDir: 'dist',
     sourcemap: false,
-    chunkSizeWarningLimit: 1600,
+    chunkSizeWarningLimit: 600,
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          ui: ['lucide-react', 'canvas-confetti']
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (/[\/]node_modules[\/](react|react-dom|scheduler)[\/]/.test(id)) return 'vendor';
+            return 'vendor-libs';
+          }
         }
       }
     }

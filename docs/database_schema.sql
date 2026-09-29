@@ -1,6 +1,5 @@
--- ==============================================================================
 -- SISTEM PLANNED MAINTENANCE SYSTEM (PMS) KAPAL ENTERPRISE
--- PT. PELAYARAN BAHARIMAS KALIMANTAN
+-- ARMADA MARITIM NASIONAL
 -- Production Database DDL Schema (PostgreSQL 14+)
 -- Standar: IMO ISM Code Section 10 & Biro Klasifikasi Indonesia (BKI)
 -- ==============================================================================

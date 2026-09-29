@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { usePMS } from '../../context/PMSContext';
 import {
   Ship,
   Edit3,
@@ -30,7 +29,6 @@ const SECTION_ICONS = {
 };
 
 export const ShipParticularsView = ({ vessel, onEdit, theme = 'dark' }) => {
-  const { siteConfig } = usePMS();
   const [activeTab, setActiveTab] = useState('all');
   const [copied, setCopied] = useState(false);
 
@@ -42,7 +40,7 @@ export const ShipParticularsView = ({ vessel, onEdit, theme = 'dark' }) => {
   const handleCopySummary = () => {
     const text = `
 === LEMBAR DATA PARTICULAR KAPAL ===
-${siteConfig?.companyName || siteConfig?.systemTitle || 'SISTEM PMS ARMADA'}
+SISTEM PMS ARMADA MARITIM
 Nama Kapal: ${particulars.vesselName || vessel.name}
 Tipe: ${particulars.vesselType || vessel.type}
 Status: ${particulars.ownershipStatus || vessel.ownershipStatus}
@@ -195,13 +193,13 @@ Kru / Akomodasi: ${particulars.crewComplement || '-'}
             </div>
             <div>
               <h2 style={{ fontSize: '1.35rem', fontWeight: 900, letterSpacing: '0.03em', color: 'var(--text-main)', margin: 0, textTransform: 'uppercase' }}>
-                {siteConfig?.companyName || siteConfig?.systemTitle || 'OPERATOR ARMADA PELAYARAN'}
+                SISTEM PMS ARMADA MARITIM
               </h2>
               <p style={{ fontSize: '0.78rem', color: '#0284c7', letterSpacing: '0.02em', textTransform: 'uppercase', fontWeight: 700, margin: '2px 0 0 0' }}>
                 SHIP OWNER, OPERATOR & MARITIME LOGISTICS SERVICES
               </p>
               <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>
-                Kantor Pusat: {siteConfig?.officeAddress || 'Kantor Operasional Pelayaran Maritim'} • Telp: (021) 555-0199
+                Kantor Pusat: Komp. Pontianak Mall Blok D No. 8-9, Jl. Tanjungpura, Kota Pontianak 78122, Kalimantan Barat • Telp: (0561) 734567
               </p>
             </div>
           </div>
@@ -526,7 +524,7 @@ Kru / Akomodasi: ${particulars.crewComplement || '-'}
               <p style={{ fontSize: '0.82rem', fontWeight: 800, borderTop: '1px solid #94a3b8', paddingTop: '0.25rem', margin: 0, textDecoration: 'underline' }}>
                 Ir. Heri Prasetyo
               </p>
-              <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>{siteConfig?.companyName || siteConfig?.systemTitle || 'Perusahaan Pelayaran'}</span>
+              <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Sistem Manajemen Armada Maritim</span>
             </div>
           </div>
         </div>
@@ -544,10 +542,10 @@ Kru / Akomodasi: ${particulars.crewComplement || '-'}
           }}
         >
           <div>
-            Dokumen Teknis Resmi {siteConfig?.companyName || siteConfig?.systemTitle || 'Perusahaan Pelayaran'} • Sistem Manajemen Armada PMS Cloud
+            Dokumen Teknis Resmi Sistem Manajemen Armada PMS Cloud
           </div>
           <div>
-            Distribusi: 1. Arsip Kantor Darat | 2. Onboard {vessel.name} | 3. Arsip Syahbandar / BKI
+            Distribusi: 1. Arsip Kantor Darat Pontianak | 2. Onboard {vessel.name} | 3. Arsip Syahbandar / BKI
           </div>
         </div>
       </div>

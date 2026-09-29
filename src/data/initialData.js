@@ -1,6 +1,6 @@
-// Clean White-Label Initial State Data - Planned Maintenance System (PMS)
-// Seluruh data operasional dikosongkan secara default agar siap diisi oleh perusahaan baru.
-// Template akun demo dan pengaturan notifikasi standar tetap disiapkan.
+// Clean State Baseline Data - Sistem PMS Armada Maritim
+// Seluruh data dummy telah dikosongkan untuk pengujian input sistem dari awal (clean test)
+// Data login pengguna dan pengaturan ambang batas notifikasi tetap dipertahankan.
 
 import { createDefaultShipParticulars } from './shipParticularsData.js';
 import { buildComprehensiveFleetDocuments } from './shipCertificatesMaster.js';
@@ -210,10 +210,10 @@ export const INITIAL_NOTIFICATION_SETTINGS = {
       "provider": "Backend API",
       "apiUrl": "/api/notifications/email",
       "apiKey": "",
-      "fromName": "Sistem PMS Maritim",
-      "fromEmail": "noreply@pms-maritim.id",
-      "replyTo": "fleet.ops@pms-maritim.id",
-      "defaultRecipients": ["fleet.ops@pms-maritim.id"]
+      "fromName": "PMS Armada Maritim",
+      "fromEmail": "noreply@pms-maritim.com",
+      "replyTo": "fleet.ops@pms-maritim.com",
+      "defaultRecipients": ["fleet.ops@pms-maritim.com"]
     },
     "lastRunDate": ""
   },
@@ -227,12 +227,12 @@ export const INITIAL_NOTIFICATION_SETTINGS = {
 // 15. Riwayat Log Notifikasi (Notification Logs) - Kosong
 export const INITIAL_NOTIFICATION_LOGS = [];
 
-// 16. Akun Login Pengguna (Users) - Standar Multi-Peran (Password: 123)
+// 16. Akun Login Pengguna (Users) - Dipertahankan untuk Uji Coba Semua Peran (Password Demo: 123)
 export const INITIAL_USERS = [
   {
     "id": "u-1",
     "name": "Capt. Robert Sitorus, M.Mar",
-    "email": "admin@pms-maritim.id",
+    "email": "admin@pms-maritim.com",
     "password": "123",
     "role": "Super Admin",
     "title": "Head of Fleet Operations",
@@ -242,47 +242,47 @@ export const INITIAL_USERS = [
   {
     "id": "u-2",
     "name": "Ir. H. Gunawan, M.T",
-    "email": "fleet.ops@pms-maritim.id",
+    "email": "fleet.ops@pms-maritim.com",
     "password": "123",
     "role": "Fleet Manager",
-    "title": "General Manager Armada",
+    "title": "General Manager Operasional Armada",
     "shipAccess": "All",
     "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80"
   },
   {
     "id": "u-3",
     "name": "Capt. Hendra Gunawan, M.Mar",
-    "email": "nakhoda@pms-maritim.id",
+    "email": "nakhoda@pms-maritim.com",
     "password": "123",
     "role": "Admin Kapal / Nakhoda",
-    "title": "Nakhoda Armada",
-    "shipAccess": "All",
+    "title": "Nakhoda RP 2020",
+    "shipAccess": "v-001",
     "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80"
   },
   {
     "id": "u-4",
     "name": "Ir. Bambang Wijaya (KKM)",
-    "email": "kkm@pms-maritim.id",
+    "email": "kkm@pms-maritim.com",
     "password": "123",
     "role": "Teknisi / Chief Engineer",
-    "title": "Chief Engineer (KKM) Armada",
-    "shipAccess": "All",
+    "title": "Chief Engineer (KKM) RP 2020",
+    "shipAccess": "v-001",
     "avatar": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=120&q=80"
   },
   {
     "id": "u-5",
     "name": "Suryadi Pratama",
-    "email": "abk@pms-maritim.id",
+    "email": "abk@pms-maritim.com",
     "password": "123",
     "role": "Crew / ABK",
-    "title": "Juru Mudi / ABK",
-    "shipAccess": "All",
+    "title": "Juru Mudi / ABK RP 2020",
+    "shipAccess": "v-001",
     "avatar": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=120&q=80"
   },
   {
     "id": "u-6",
     "name": "Siti Rahmawati, S.Psi",
-    "email": "hr@pms-maritim.id",
+    "email": "hr@pms-maritim.com",
     "password": "123",
     "role": "HR / Personalia",
     "title": "Crewing & STCW Compliance",
@@ -292,7 +292,7 @@ export const INITIAL_USERS = [
   {
     "id": "u-7",
     "name": "Michael Chandra, SE",
-    "email": "finance@pms-maritim.id",
+    "email": "finance@pms-maritim.com",
     "password": "123",
     "role": "Finance",
     "title": "Finance & Logistics Purchasing",
@@ -300,10 +300,3 @@ export const INITIAL_USERS = [
     "avatar": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=120&q=80"
   }
 ];
-
-// 17. Presensi Kehadiran Kru Kapal (Attendance) - Kosong
-export const INITIAL_ATTENDANCE = [];
-
-// 18. Pengajuan & Cicilan Kasbon Kru (Kasbon) - Kosong
-export const INITIAL_KASBON = [];
-

@@ -12,7 +12,6 @@ import {
 
 export const ReportGenerator = () => {
   const {
-    siteConfig,
     vessels,
     workOrders,
     equipment,
@@ -175,13 +174,13 @@ export const ReportGenerator = () => {
           <MaritimeEmblem size={56} />
           <div style={{ flex: 1 }}>
             <h2 style={{ fontSize: '1.3rem', fontWeight: 900, color: '#0f172a', margin: 0, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-              {siteConfig?.companyName || siteConfig?.systemTitle || 'OPERATOR ARMADA PELAYARAN'}
+              SISTEM PMS ARMADA MARITIM
             </h2>
             <p style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0369a1', margin: '2px 0 0 0', textTransform: 'uppercase' }}>
               FLEET OPERATIONS, LOGISTICS & MARINE ENGINEERING DIRECTORATE
             </p>
             <p style={{ fontSize: '0.72rem', color: '#475569', margin: '2px 0 0 0' }}>
-              {siteConfig?.officeAddress || 'Kantor Operasional Pelayaran Maritim'} • Telp: (021) 555-0199 • Email: {siteConfig?.officeEmail || 'management@pms-maritim.id'}
+              Jl. Pelabuhan Niaga No. 88, Pontianak, Kalimantan Barat 78111 • Telp: (0561) 741234 • Email: management@pms-maritim.com
             </p>
             <p style={{ fontSize: '0.68rem', color: '#64748b', margin: '1px 0 0 0' }}>
               SIUPAL: B.XX-248/AL.001/DJPL • Sistem Manajemen Mutu Terverifikasi ISO 9001:2015 & IMO ISM Code
@@ -451,7 +450,7 @@ export const ReportGenerator = () => {
           fontSize: '0.68rem',
           color: '#64748b'
         }}>
-          <span>Dicetak melalui: {siteConfig?.systemTitle || 'Sistem PMS Kapal'} Terintegrasi</span>
+          <span>Dicetak melalui: Sistem PMS Armada Maritim Terintegrasi</span>
           <span>Sertifikasi: ISO 9001:2015 & IMO ISM Code DOC-04/2026</span>
           <span>Dokumen Resmi Perusahaan</span>
         </div>

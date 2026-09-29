@@ -8,11 +8,36 @@ import {
   Link,
   Maximize2,
   Minimize2,
-  Clock
+  Clock,
+  Building2,
+  Ship,
+  Sparkles,
+  Upload,
+  CheckCircle2,
+  FileText,
+  Trash2
 } from 'lucide-react';
+import {
+  BKI_AUDIT_MASTER,
+  NON_BKI_AUDIT_ORGANIZATIONS,
+  EXTERNAL_AUDIT_ORGANIZATIONS
+} from '../../data/auditMasterData';
+import { canPerformAction } from '../../utils/rbac';
+import { FindingModalHeader } from './finding/FindingModalHeader';
+import { FindingAuditTypeSection } from './finding/FindingAuditTypeSection';
+import { FindingInfoSection } from './finding/FindingInfoSection';
+import { FindingDetailSection } from './finding/FindingDetailSection';
+import { FindingCategorySection } from './finding/FindingCategorySection';
+import { FindingVerificationSection } from './finding/FindingVerificationSection';
+import { FindingEvidenceSection } from './finding/FindingEvidenceSection';
+import { FindingLinksSection } from './finding/FindingLinksSection';
+import { FindingModalFooter } from './finding/FindingModalFooter';
+import { FindingDeleteConfirm } from './finding/FindingDeleteConfirm';
+import { FindingCapaSection } from './finding/FindingCapaSection';
 
 export const AuditFindingModal = ({ finding, defaultAuditId, defaultVesselId, onClose }) => {
   const {
+    currentUser,
     audits,
     allAudits,
     vessels,
@@ -21,12 +46,16 @@ export const AuditFindingModal = ({ finding, defaultAuditId, defaultVesselId, on
     requisitions,
     addAuditFinding,
     updateAuditFinding,
-    ISM_DOC_ELEMENTS,
-    ISM_SMC_ELEMENTS
+    deleteAuditFinding,
+    showToast
   } = usePMS();
 
-  const isEdit = Boolean(finding);
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  const userRole = currentUser?.role || 'Super Admin';
+  const isAuditorOrDPA = canPerformAction(userRole, 'create_audit_finding');
+
+  const isEdit = Boolean(finding && finding.id && !finding.isDraft);
+  const [isFullscreen, setIsFullscreen] = useState(true);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const availableAudits = audits.length > 0 ? audits : allAudits;
   const vesselMatchedAudit = defaultVesselId && defaultVesselId !== 'office'
@@ -41,121 +70,205 @@ export const AuditFindingModal = ({ finding, defaultAuditId, defaultVesselId, on
 
   const currentAudit = availableAudits.find(a => a.id === auditId) || availableAudits[0];
 
-  const standard = currentAudit?.standard || 'DOC';
-  const auditType = currentAudit?.auditType || 'Internal';
+  const standard = currentAudit?.standard || 'SMC';
+  
+  // Dynamic Institution Settings (Internal = Perusahaan, External = Lembaga Ditunjuk Perusahaan)
+  const [auditType, setAuditType] = useState(finding?.auditType || currentAudit?.auditType || 'External');
+  const rawInitOrg = finding?.externalOrganization || currentAudit?.externalOrganization;
+  const initialOrgStr = typeof rawInitOrg === 'object' && rawInitOrg !== null
+    ? (rawInitOrg.name || 'Biro Klasifikasi Indonesia (BKI)')
+    : (rawInitOrg || 'Biro Klasifikasi Indonesia (BKI)');
+  const [externalOrg, setExternalOrg] = useState(initialOrgStr);
+  const [customExternalOrg, setCustomExternalOrg] = useState('');
 
-  const [isManualClause, setIsManualClause] = useState(false);
-  const [clauseCode, setClauseCode] = useState(finding?.clauseCode || 'ISM-10');
-  const [clauseName, setClauseName] = useState(finding?.clauseName || 'Pemeliharaan Kapal & Perlengkapan');
-
+  // Report Reference & Document Identifiers
+  const [reportId, setReportId] = useState(finding?.reportId || currentAudit?.reportId || '');
   const [findingNo, setFindingNo] = useState(finding?.findingNo || '');
-  const [category, setCategory] = useState(finding?.category || 'Minor NC');
-  const [description, setDescription] = useState(finding?.description || '');
-  const [objectiveEvidence, setObjectiveEvidence] = useState(finding?.objectiveEvidence || '');
-  const [assignedTo, setAssignedTo] = useState(finding?.assignedTo || '');
+  const [areaUnderAudit, setAreaUnderAudit] = useState(
+    finding?.areaUnderAudit || finding?.targetName || currentAudit?.targetName || ''
+  );
+  const [vesselId, setVesselId] = useState(finding?.vesselId || currentAudit?.vesselId || (vessels[0]?.id || ''));
+  const [dateOfAudit, setDateOfAudit] = useState(
+    finding?.dateIdentified || currentAudit?.auditDate || new Date().toISOString().split('T')[0]
+  );
+  const [elementNumberOfCode, setElementNumberOfCode] = useState(
+    finding?.elementNumberOfCode || finding?.clauseCode || ''
+  );
+  const [clauseCode, setClauseCode] = useState(finding?.clauseCode || '');
+  const [clauseName, setClauseName] = useState(
+    finding?.clauseName || ''
+  );
+  const [isManualClause, setIsManualClause] = useState(true);
+
+  // Deficiency Details & Objective Evidence
+  const [description, setDescription] = useState(
+    finding?.description || ''
+  );
+  const [objectiveEvidence, setObjectiveEvidence] = useState(
+    finding?.objectiveEvidence || ''
+  );
+  const [category, setCategory] = useState(finding?.category || 'Non-Conformity');
+
+  // Signatures Stage 1 (Initial Report)
   const [auditor, setAuditor] = useState(finding?.auditor || currentAudit?.leadAuditor || '');
-  const [dueDate, setDueDate] = useState(
-    finding?.dueDate ||
-    new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  const [auditee, setAuditee] = useState(finding?.auditee || currentAudit?.auditee || '');
+  const [assignedTo, setAssignedTo] = useState(finding?.assignedTo || '');
+
+  // Correction & CAP (By Auditee)
+  const [correction, setCorrection] = useState(
+    finding?.correction || finding?.evidence?.correction || ''
   );
-  const [dateIdentified, setDateIdentified] = useState(
-    finding?.dateIdentified || new Date().toISOString().split('T')[0]
+  const [rootCause, setRootCause] = useState(
+    finding?.rootCause || finding?.evidence?.rootCause || ''
+  );
+  const [correctiveAction, setCorrectiveAction] = useState(
+    finding?.correctiveAction || finding?.evidence?.correctiveAction || ''
+  );
+  const [agreedDate, setAgreedDate] = useState(
+    finding?.agreedDate || finding?.dueDate || ''
+  );
+  const [auditeeSignatureDate, setAuditeeSignatureDate] = useState(
+    finding?.auditeeSignatureDate || ''
   );
 
-  const setPresetDueDate = (days) => {
-    try {
-      const start = dateIdentified ? new Date(dateIdentified) : new Date();
-      const next = new Date(start.getTime() + days * 24 * 60 * 60 * 1000);
-      setDueDate(next.toISOString().split('T')[0]);
-    } catch {}
-  };
+  // Verification Stage (By Auditor)
+  const [verifiedUpgradeDowngrade, setVerifiedUpgradeDowngrade] = useState(
+    finding?.verifiedUpgradeDowngrade || 'NC' // null | 'MJ' | 'NC'
+  );
+  const [verifiedSatisfactory, setVerifiedSatisfactory] = useState(
+    finding?.verifiedSatisfactory !== undefined ? finding.verifiedSatisfactory : true
+  );
+  const [auditorSignatureDate, setAuditorSignatureDate] = useState(
+    finding?.auditorSignatureDate || ''
+  );
+  const [auditorReviewNotes, setAuditorReviewNotes] = useState(
+    finding?.evidence?.auditorReviewNotes || ''
+  );
 
-  const allocatedDays = useMemo(() => {
-    try {
-      const start = new Date(dateIdentified);
-      const end = new Date(dueDate);
-      const diff = Math.round((end - start) / (1000 * 60 * 60 * 24));
-      return isNaN(diff) ? 30 : diff;
-    } catch {
-      return 30;
-    }
-  }, [dateIdentified, dueDate]);
+  // File Attachment for Evidence
+  const [evidenceFileName, setEvidenceFileName] = useState(finding?.evidence?.fileName || '');
+  const [evidenceFileSize, setEvidenceFileSize] = useState(finding?.evidence?.fileSize || '');
+  const [evidenceFileUrl, setEvidenceFileUrl] = useState(finding?.evidence?.fileUrl || '');
 
+  // Integrations
   const [linkedCertificateId, setLinkedCertificateId] = useState(finding?.linkedCertificateId || '');
   const [linkedRequisitionId, setLinkedRequisitionId] = useState(finding?.linkedRequisitionId || '');
 
-  useEffect(() => {
-    if (!isEdit && !findingNo) {
-      const rand = Math.floor(Math.random() * 9000 + 1000);
-      setFindingNo(`NC-${standard}-${rand}`);
-    }
-  }, [isEdit, standard, findingNo]);
-
-  useEffect(() => {
-    if (currentAudit && !isEdit) {
-      if (currentAudit.leadAuditor) setAuditor(currentAudit.leadAuditor);
-      if (currentAudit.standard === 'DOC') {
-        setAssignedTo('Manager QHSE / Staff Logistik Darat');
-      } else {
-        const v = vessels.find(item => item.id === currentAudit.vesselId);
-        setAssignedTo(`KKM / Masinis 1 (${v?.name || 'Kapal'})`);
-      }
-    }
-  }, [currentAudit, isEdit, vessels]);
-
-  const handleStandardClauseChange = (code) => {
-    setClauseCode(code);
-    const elementsList = standard === 'DOC' ? ISM_DOC_ELEMENTS : ISM_SMC_ELEMENTS;
-    const matched = elementsList.find(e => e.code === code);
-    if (matched) {
-      setClauseName(matched.name);
-    }
+  // Quick Preset for Example Case RP 2004 (from User Scan PNG & PDF)
+  const handleLoadSampleRP2004 = () => {
+    setAuditType('External');
+    setExternalOrg('Biro Klasifikasi Indonesia (BKI)');
+    setReportId('0859 - PK/ISM- SMC /2026');
+    setFindingNo('1/4 - 0859 - PK/ISM- SMC /2026');
+    setAreaUnderAudit('RP 2004');
+    setDateOfAudit('2026-08-18');
+    setElementNumberOfCode('5.1.5 or other');
+    setClauseCode('5.1.5');
+    setClauseName('Tanggung Jawab & Wewenang Nakhoda (Peninjauan Kembali SMK)');
+    setIsManualClause(true);
+    setDescription('Nakhoda belum memahami semua tanggung jawab dan wewenangnya yang telah didokumentasikan menyangkut hal peninjauan kembali SMK dan melaporkan kekurangannya kepada manajemen didarat secara berkala');
+    setObjectiveEvidence('- Master review tahun 2025 tidak ditemukan saat audit\n- Tidak ditemukan master night order, analisa risiko untuk pekerjaan deck maupun permesinan dan penilaian crew periode semester I tahun 2026 pada saat diaudit');
+    setCategory('Non-Conformity');
+    setAuditor('MUHSON NURROCHMAT S');
+    setAuditee('CAPT. EKHSAN');
+    setAssignedTo('Nakhoda / Master TB. RP 2004');
+    setCorrection('Melakukan penyusunan formulir Master Review 2025/2026, menerbitkan Master Night Order dan Analisa Risiko (Risk Assessment) pekerjaan deck maupun permesinan serta form penilaian crew semester I tahun 2026.');
+    setRootCause('Nakhoda belum sepenuhnya memahami prosedur peninjauan berkala sistem manajemen keselamatan dan pergantian dokumen master di atas kapal.');
+    setCorrectiveAction('Pihak manajemen darat memberikan penyegaran prosedur ISM Code klausul 5 serta melengkapi template baku Master Review dan checklist verifikasi berkala.');
+    setAgreedDate('2026-11-17');
+    setAuditeeSignatureDate('2026-11-17');
+    setVerifiedUpgradeDowngrade('NC');
+    setVerifiedSatisfactory(true);
+    setAuditorSignatureDate('2026-11-17');
+    setAuditorReviewNotes('Dokumen Master Review dan form Analisa Risiko telah diperiksa. Pelaksanaan tindakan korektif memuaskan.');
+    setEvidenceFileName('Eviden_Master_Review_Risk_Assessment_RP2004.pdf');
+    setEvidenceFileSize('1.4 MB');
+    setEvidenceFileUrl('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22600%22%20height%3D%22400%22%20viewBox%3D%220%200%20600%20400%22%3E%3Crect%20width%3D%22600%22%20height%3D%22400%22%20fill%3D%22%23f8fafc%22%2F%3E%3Crect%20x%3D%2220%22%20y%3D%2220%22%20width%3D%22560%22%20height%3D%22360%22%20fill%3D%22none%22%20stroke%3D%22%230284c7%22%20stroke-width%3D%222%22%2F%3E%3Ctext%20x%3D%22300%22%20y%3D%2260%22%20font-family%3D%22Arial%22%20font-size%3D%2216%22%20font-weight%3D%22bold%22%20fill%3D%22%230369a1%22%20text-anchor%3D%22middle%22%3EDOKUMEN%20BUKTI%20PERBAIKAN%20ISM%20CODE%3C%2Ftext%3E%3Ctext%20x%3D%22300%22%20y%3D%2290%22%20font-family%3D%22Arial%22%20font-size%3D%2212%22%20fill%3D%22%2364748b%22%20text-anchor%3D%22middle%22%3EMASTER%20REVIEW%20%26%20RISK%20ASSESSMENT%20RP%202004%3C%2Ftext%3E%3C%2Fsvg%3E');
+    showToast('✓ Data laporan contoh RP 2004 berhasil dimuat ke formulir!', 'success');
   };
 
-  const relevantCertificates = (shipDocuments || []).filter(doc => {
-    if (currentAudit?.standard === 'DOC') {
-      return doc.type?.toLowerCase().includes('doc') || doc.type?.toLowerCase().includes('compliance') || doc.vesselId === 'all';
+  const handleFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setEvidenceFileName(file.name);
+      setEvidenceFileSize(`${(file.size / 1024).toFixed(1)} KB`);
+      const reader = new FileReader();
+      reader.onload = (loadEvt) => {
+        setEvidenceFileUrl(loadEvt.target.result);
+      };
+      reader.readAsDataURL(file);
+      showToast(`✓ File bukti ${file.name} berhasil diunggah!`, 'success');
     }
-    if (currentAudit?.vesselId) {
-      return doc.vesselId === currentAudit.vesselId;
-    }
-    return true;
-  });
-
-  const relevantRequisitions = (requisitions || []).filter(req => {
-    if (currentAudit?.vesselId) {
-      return req.vesselId === currentAudit.vesselId;
-    }
-    return true;
-  });
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    if (!isAuditorOrDPA) {
+      showToast('Akses Terbatas: Hanya Auditor dan DPA yang berwenang menerbitkan atau mengubah lembar NCR resmi.', 'warning');
+      return;
+    }
+
     const linkedReqObj = requisitions.find(r => r.id === linkedRequisitionId);
     const linkedDocObj = shipDocuments.find(d => d.id === linkedCertificateId);
 
+    const isCustom = externalOrg === 'custom' ||
+      externalOrg === 'Lembaga Audit Eksternal Lainnya (Input Manual)' ||
+      (typeof externalOrg === 'string' && externalOrg.includes('Lainnya'));
+
+    const activeExternalOrg = auditType === 'External' 
+      ? (isCustom ? (customExternalOrg.trim() || 'Lembaga Eksternal Ditunjuk') : (typeof externalOrg === 'string' ? externalOrg : externalOrg?.name || 'Biro Klasifikasi Indonesia (BKI)'))
+      : null;
+
     const payload = {
-      findingNo: findingNo.trim() || `NC-${standard}-${Math.floor(Math.random() * 9000 + 1000)}`,
+      findingNo: findingNo.trim() || `NC-5.1.5-${Math.floor(Math.random() * 9000 + 1000)}`,
+      reportId: reportId.trim() || '0859 - PK/ISM- SMC /2026',
       auditId: currentAudit?.id || auditId,
-      auditNo: currentAudit?.auditNo || 'AUD-ISM',
-      auditType: currentAudit?.auditType || auditType,
+      auditNo: currentAudit?.auditNo || reportId,
+      auditType,
+      externalOrganization: activeExternalOrg,
       standard: currentAudit?.standard || standard,
-      targetName: currentAudit?.targetName || (currentAudit?.vesselId ? (vessels.find(v => v.id === currentAudit.vesselId)?.name) : 'Kantor Pusat'),
-      vesselId: currentAudit?.vesselId || null,
+      areaUnderAudit: areaUnderAudit.trim(),
+      targetName: areaUnderAudit.trim(),
+      vesselId: vesselId || currentAudit?.vesselId || null,
+      elementNumberOfCode: elementNumberOfCode.trim(),
       clauseCode: clauseCode.trim(),
       clauseName: clauseName.trim(),
       category,
       description: description.trim(),
       objectiveEvidence: objectiveEvidence.trim(),
-      dateIdentified,
-      dueDate,
-      assignedTo: assignedTo.trim() || 'PIC Terkait',
-      auditor: auditor.trim() || currentAudit?.leadAuditor || 'Auditor ISM',
+      dateIdentified: dateOfAudit,
+      dueDate: agreedDate,
+      agreedDate,
+      assignedTo: assignedTo.trim() || 'Nakhoda / Master',
+      auditor: auditor.trim() || 'Auditor ISM',
+      auditee: auditee.trim() || 'Auditee',
+      correction: correction.trim(),
+      rootCause: rootCause.trim(),
+      correctiveAction: correctiveAction.trim(),
+      verifiedUpgradeDowngrade,
+      verifiedSatisfactory,
+      auditorSignatureDate,
+      auditeeSignatureDate,
       linkedCertificateId: linkedCertificateId || null,
       linkedCertificateTitle: linkedDocObj ? `${linkedDocObj.name || linkedDocObj.type} (${linkedDocObj.documentNumber || 'No. Reg'})` : null,
       linkedRequisitionId: linkedRequisitionId || null,
-      linkedRequisitionTitle: linkedReqObj ? `${linkedReqObj.requisitionNumber || linkedReqObj.id} - ${linkedReqObj.title || linkedReqObj.department || 'Permintaan Gudang'}` : null
+      linkedRequisitionTitle: linkedReqObj ? `${linkedReqObj.requisitionNumber || linkedReqObj.id} - ${linkedReqObj.title || linkedReqObj.department || 'Permintaan Gudang'}` : null,
+      evidence: {
+        hasSubmitted: Boolean(correction || correctiveAction),
+        submissionDate: auditeeSignatureDate || new Date().toISOString().split('T')[0],
+        submittedBy: auditee,
+        correction,
+        rootCause,
+        correctiveAction,
+        fileName: evidenceFileName,
+        fileSize: evidenceFileSize,
+        fileUrl: evidenceFileUrl,
+        auditorReviewNotes,
+        verifiedUpgradeDowngrade,
+        verifiedSatisfactory,
+        closedDate: verifiedSatisfactory ? auditorSignatureDate : null
+      }
     };
 
     if (isEdit) {
@@ -172,393 +285,144 @@ export const AuditFindingModal = ({ finding, defaultAuditId, defaultVesselId, on
       <div
         className={isFullscreen ? 'modal-fullscreen' : 'modal-dialog'}
         style={{
-          maxWidth: isFullscreen ? '98vw' : '720px',
+          maxWidth: isFullscreen ? '98vw' : '880px',
+          background: 'var(--bg-surface-card)',
+          backgroundColor: 'var(--bg-surface-card)',
+          border: '1px solid var(--border-subtle)',
+          boxShadow: '0 25px 60px rgba(0,0,0,0.5)',
           display: 'flex',
-          flexDirection: 'column'
+          flexDirection: 'column',
+          overflow: 'hidden',
+          opacity: 1
         }}
       >
         {/* Header */}
-        <div className="modal-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <div style={{
-              padding: '0.5rem',
-              borderRadius: '10px',
-              background: category === 'Major NC' ? 'rgba(239, 68, 68, 0.15)' : category === 'Minor NC' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(2, 132, 199, 0.15)',
-              color: category === 'Major NC' ? '#ef4444' : category === 'Minor NC' ? '#f59e0b' : '#0284c7'
-            }}>
-              <AlertTriangle size={22} />
-            </div>
-            <div>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 800 }}>
-                {isEdit ? `Edit Temuan Audit (${finding?.findingNo})` : 'Catat Temuan Ketidaksesuaian (NC Open)'}
-              </h3>
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                Audit {currentAudit?.auditType} • Standar {currentAudit?.standard} ({currentAudit?.targetName})
-              </p>
-            </div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            <button
-              type="button"
-              onClick={() => setIsFullscreen(!isFullscreen)}
-              className="btn btn-secondary btn-sm"
-              style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.35rem 0.6rem' }}
-              title={isFullscreen ? 'Kecilkan Layar' : 'Layar Penuh (Fullscreen)'}
-            >
-              {isFullscreen ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
-              <span style={{ fontSize: '0.75rem' }}>{isFullscreen ? 'Normal' : 'Fullscreen'}</span>
-            </button>
-            <button onClick={onClose} className="btn btn-secondary btn-sm" style={{ padding: '0.35rem 0.6rem' }}>
-              <X size={16} />
-            </button>
-          </div>
-        </div>
+        <FindingModalHeader
+          auditType={auditType}
+          externalOrg={externalOrg}
+          handleLoadSampleRP2004={handleLoadSampleRP2004}
+          isFullscreen={isFullscreen}
+          onClose={onClose}
+          reportId={reportId}
+          setIsFullscreen={setIsFullscreen}
+        />
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-          <div className="modal-body" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.15rem' }}>
-            {/* Row 1: Audit Session & Finding No */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr', gap: '1rem' }}>
-              <div>
-                <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.35rem' }}>
-                  Pilih Sesi Audit ISM *
-                </label>
-                <select
-                  value={auditId}
-                  disabled={isEdit}
-                  onChange={(e) => setAuditId(e.target.value)}
-                  className="select-control"
-                  style={{ opacity: isEdit ? 0.7 : 1 }}
-                >
-                  {availableAudits.map(a => (
-                    <option key={a.id} value={a.id}>
-                      {a.auditNo} - {a.auditType} {a.standard} ({a.targetName?.slice(0, 24)})
-                    </option>
-                  ))}
-                </select>
-              </div>
+          <div className="modal-body" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.25rem', padding: '1.5rem', background: 'var(--bg-surface-card)', backgroundColor: 'var(--bg-surface-card)', opacity: 1 }}>
+            
+            {/* KONTROL JENIS AUDIT & LEMBAGA (SESUAI ATURAN USER) */}
+            <FindingAuditTypeSection
+              auditType={auditType}
+              customExternalOrg={customExternalOrg}
+              externalOrg={externalOrg}
+              reportId={reportId}
+              setAuditType={setAuditType}
+              setCustomExternalOrg={setCustomExternalOrg}
+              setExternalOrg={setExternalOrg}
+              setReportId={setReportId}
+            />
 
-              <div>
-                <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.35rem' }}>
-                  Nomor Temuan (NC Code) *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={findingNo}
-                  onChange={(e) => setFindingNo(e.target.value)}
-                  placeholder="contoh: NC-DOC-102"
-                  className="input-control mono"
-                  style={{ fontWeight: 700 }}
-                />
-              </div>
-            </div>
+            {/* SEKSI 1: INFORMASI KETIDAKSESUAIAN / NON-CONFORMITY INFORMATION */}
+            <FindingInfoSection
+              areaUnderAudit={areaUnderAudit}
+              dateOfAudit={dateOfAudit}
+              elementNumberOfCode={elementNumberOfCode}
+              findingNo={findingNo}
+              setAreaUnderAudit={setAreaUnderAudit}
+              setClauseCode={setClauseCode}
+              setDateOfAudit={setDateOfAudit}
+              setElementNumberOfCode={setElementNumberOfCode}
+              setFindingNo={setFindingNo}
+            />
 
-            {/* Row 2: Category & Clause Mode Toggle */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div>
-                <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.35rem' }}>
-                  Kategori Temuan (Severity) *
-                </label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.4rem' }}>
-                  <button
-                    type="button"
-                    onClick={() => setCategory('Major NC')}
-                    className={`btn btn-sm ${category === 'Major NC' ? 'btn-danger' : 'btn-secondary'}`}
-                    style={{ fontSize: '0.72rem', padding: '0.35rem 0.2rem' }}
-                  >
-                    Major NC
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCategory('Minor NC')}
-                    className={`btn btn-sm ${category === 'Minor NC' ? 'btn-primary' : 'btn-secondary'}`}
-                    style={{ fontSize: '0.72rem', padding: '0.35rem 0.2rem' }}
-                  >
-                    Minor NC
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCategory('Observation')}
-                    className={`btn btn-sm ${category === 'Observation' ? 'btn-primary' : 'btn-secondary'}`}
-                    style={{ fontSize: '0.72rem', padding: '0.35rem 0.2rem' }}
-                  >
-                    Observasi
-                  </button>
-                </div>
-              </div>
+            {/* SEKSI 2: RINCIAN KETIDAKSESUAIAN & BUKTI OBJEKTIF */}
+            <FindingDetailSection
+              description={description}
+              objectiveEvidence={objectiveEvidence}
+              setDescription={setDescription}
+              setObjectiveEvidence={setObjectiveEvidence}
+            />
 
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
-                  <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>
-                    Mode Klausul ISM
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setIsManualClause(!isManualClause)}
-                    style={{ background: 'none', border: 'none', color: '#0284c7', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
-                  >
-                    <Code size={12} />
-                    <span>{isManualClause ? 'Daftar Standar' : '✍️ Input Manual'}</span>
-                  </button>
-                </div>
+            {/* SEKSI 3: KATEGORI KETIDAKSESUAIAN & TANDA TANGAN AWAL */}
+            <FindingCategorySection
+              areaUnderAudit={areaUnderAudit}
+              auditType={auditType}
+              auditee={auditee}
+              auditor={auditor}
+              category={category}
+              externalOrg={externalOrg}
+              setAuditee={setAuditee}
+              setAuditor={setAuditor}
+              setCategory={setCategory}
+            />
 
-                {isManualClause ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                    <input
-                      type="text"
-                      required
-                      value={clauseCode}
-                      onChange={(e) => setClauseCode(e.target.value)}
-                      placeholder="Kode Klausul Manual (cth: ISM-10.3)"
-                      className="input-control mono"
-                      style={{ fontWeight: 700, color: '#0284c7' }}
-                    />
-                    <input
-                      type="text"
-                      required
-                      value={clauseName}
-                      onChange={(e) => setClauseName(e.target.value)}
-                      placeholder="Judul / Deskripsi Klausul"
-                      className="input-control"
-                      style={{ fontSize: '0.8rem' }}
-                    />
-                  </div>
-                ) : (
-                  <select
-                    value={clauseCode}
-                    onChange={(e) => handleStandardClauseChange(e.target.value)}
-                    className="select-control"
-                  >
-                    {(standard === 'DOC' ? ISM_DOC_ELEMENTS : ISM_SMC_ELEMENTS).map(elem => (
-                      <option key={elem.code} value={elem.code}>
-                        {elem.code} - {elem.name}
-                      </option>
-                    ))}
-                  </select>
-                )}
-              </div>
-            </div>
+            <FindingCapaSection
+              agreedDate={agreedDate}
+              auditeeSignatureDate={auditeeSignatureDate}
+              correction={correction}
+              correctiveAction={correctiveAction}
+              rootCause={rootCause}
+              setAgreedDate={setAgreedDate}
+              setAuditeeSignatureDate={setAuditeeSignatureDate}
+              setCorrection={setCorrection}
+              setCorrectiveAction={setCorrectiveAction}
+              setRootCause={setRootCause}
+            />
 
-            {/* Row 3: Description */}
-            <div>
-              <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.35rem' }}>
-                Uraian Ketidaksesuaian (Description of Non-Conformity) *
-              </label>
-              <textarea
-                required
-                rows={3}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Jelaskan kondisi ketidaksesuaian yang ditemukan terhadap prosedur ISM Code..."
-                className="input-control"
-                style={{ resize: 'vertical' }}
-              />
-            </div>
+            {/* SEKSI 7: TINDAKAN PERBAIKAN TELAH DIVERIFIKASI (diisi oleh Auditor) / CORRECTIVE ACTION VERIFIED */}
+            <FindingVerificationSection
+              auditorReviewNotes={auditorReviewNotes}
+              auditorSignatureDate={auditorSignatureDate}
+              setAuditorReviewNotes={setAuditorReviewNotes}
+              setAuditorSignatureDate={setAuditorSignatureDate}
+              setVerifiedSatisfactory={setVerifiedSatisfactory}
+              setVerifiedUpgradeDowngrade={setVerifiedUpgradeDowngrade}
+              verifiedSatisfactory={verifiedSatisfactory}
+              verifiedUpgradeDowngrade={verifiedUpgradeDowngrade}
+            />
 
-            {/* Row 4: Objective Evidence */}
-            <div>
-              <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.35rem' }}>
-                Bukti Objektif Auditor (Objective Evidence) *
-              </label>
-              <textarea
-                required
-                rows={2}
-                value={objectiveEvidence}
-                onChange={(e) => setObjectiveEvidence(e.target.value)}
-                placeholder="Fakta fisik, catatan dokumen, atau hasil observasi yang menjadi dasar temuan..."
-                className="input-control"
-                style={{ resize: 'vertical' }}
-              />
-            </div>
+            {/* SEKSI 8: UPLOAD BUKTI EVIDEN PERBAIKAN */}
+            <FindingEvidenceSection
+              evidenceFileName={evidenceFileName}
+              evidenceFileSize={evidenceFileSize}
+              handleFileUpload={handleFileUpload}
+              setEvidenceFileName={setEvidenceFileName}
+              setEvidenceFileSize={setEvidenceFileSize}
+              setEvidenceFileUrl={setEvidenceFileUrl}
+            />
 
-            {/* Row 5: Linked Certificate & Linked Requisition */}
-            <div style={{ padding: '1rem', borderRadius: '10px', background: 'var(--bg-surface-elevated)', border: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-main)' }}>
-                <Link size={14} color="#0284c7" />
-                <span>Integrasi Data Sertifikat Kapal & Permintaan Barang Gudang:</span>
-              </div>
+            {/* SEKSI 9: INTEGRASI SPB GUDANG & SERTIFIKAT */}
+            <FindingLinksSection
+              linkedCertificateId={linkedCertificateId}
+              linkedRequisitionId={linkedRequisitionId}
+              requisitions={requisitions}
+              setLinkedCertificateId={setLinkedCertificateId}
+              setLinkedRequisitionId={setLinkedRequisitionId}
+              shipDocuments={shipDocuments}
+            />
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                <div>
-                  <label style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem', fontWeight: 600 }}>
-                    Tautan Data Sertifikat Kapal
-                  </label>
-                  <select
-                    value={linkedCertificateId}
-                    onChange={(e) => setLinkedCertificateId(e.target.value)}
-                    className="select-control"
-                    style={{ fontSize: '0.78rem' }}
-                  >
-                    <option value="">-- Tidak Terkait Sertifikat Spesifik --</option>
-                    {relevantCertificates.slice(0, 30).map(cert => (
-                      <option key={cert.id} value={cert.id}>
-                        {cert.name || cert.type} ({cert.documentNumber || 'No. Dok'})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem', fontWeight: 600 }}>
-                    Tautan Permintaan Barang ke Gudang
-                  </label>
-                  <select
-                    value={linkedRequisitionId}
-                    onChange={(e) => setLinkedRequisitionId(e.target.value)}
-                    className="select-control"
-                    style={{ fontSize: '0.78rem' }}
-                  >
-                    <option value="">-- Belum Ada / Input Nanti --</option>
-                    {relevantRequisitions.map(req => (
-                      <option key={req.id} value={req.id}>
-                        {req.requisitionNumber || req.id} - {req.title || req.department || 'Material Requisition'}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            {/* Row 6: PIC, Auditor, Dates & Rentang Waktu Calculator */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '0.75rem' }}>
-                <div>
-                  <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.35rem' }}>
-                    PIC Penanggung Jawab
-                  </label>
-                  <input
-                    type="text"
-                    value={assignedTo}
-                    onChange={(e) => setAssignedTo(e.target.value)}
-                    placeholder="cth: KKM / Masinis"
-                    className="input-control"
-                    style={{ fontSize: '0.8rem' }}
-                  />
-                </div>
-
-                <div>
-                  <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.35rem' }}>
-                    Auditor ISM
-                  </label>
-                  <input
-                    type="text"
-                    value={auditor}
-                    onChange={(e) => setAuditor(e.target.value)}
-                    placeholder="Nama Auditor"
-                    className="input-control"
-                    style={{ fontSize: '0.8rem' }}
-                  />
-                </div>
-
-                <div>
-                  <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.35rem' }}>
-                    Tgl Identifikasi (Open) *
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={dateIdentified}
-                    onChange={(e) => setDateIdentified(e.target.value)}
-                    className="input-control mono"
-                    style={{ fontSize: '0.8rem' }}
-                  />
-                </div>
-
-                <div>
-                  <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.35rem' }}>
-                    Target Batas Close *
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={dueDate}
-                    onChange={(e) => setDueDate(e.target.value)}
-                    className="input-control mono"
-                    style={{ fontSize: '0.8rem', borderColor: '#0284c7' }}
-                  />
-                </div>
-              </div>
-
-              {/* Kalkulator Rentang Waktu NC */}
-              <div style={{
-                padding: '0.75rem 1rem',
-                borderRadius: '8px',
-                background: 'rgba(2, 132, 199, 0.08)',
-                border: '1px solid rgba(2, 132, 199, 0.25)',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                flexWrap: 'wrap',
-                gap: '0.65rem'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Clock size={16} color="#0284c7" />
-                  <div>
-                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#0284c7' }}>
-                      Alokasi Rentang Waktu Penyelesaian:
-                    </span>
-                    <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-main)', marginLeft: '0.35rem' }}>
-                      {allocatedDays} Hari
-                    </span>
-                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginLeft: '0.4rem' }}>
-                      ({dateIdentified} s/d {dueDate})
-                    </span>
-                  </div>
-                </div>
-
-                {/* Preset Rentang Waktu Cepat */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginRight: '0.2rem' }}>Pilihan Cepat:</span>
-                  <button
-                    type="button"
-                    onClick={() => setPresetDueDate(7)}
-                    className="btn btn-secondary btn-sm"
-                    style={{ fontSize: '0.68rem', padding: '0.2rem 0.45rem' }}
-                  >
-                    +7 Hari (Darurat)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPresetDueDate(14)}
-                    className="btn btn-secondary btn-sm"
-                    style={{ fontSize: '0.68rem', padding: '0.2rem 0.45rem' }}
-                  >
-                    +14 Hari
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPresetDueDate(30)}
-                    className="btn btn-primary btn-sm"
-                    style={{ fontSize: '0.68rem', padding: '0.2rem 0.45rem' }}
-                  >
-                    +30 Hari (Standar)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPresetDueDate(60)}
-                    className="btn btn-secondary btn-sm"
-                    style={{ fontSize: '0.68rem', padding: '0.2rem 0.45rem' }}
-                  >
-                    +60 Hari (Mayor)
-                  </button>
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Footer */}
-          <div className="modal-footer">
-            <button type="button" onClick={onClose} className="btn btn-secondary">
-              Batal
-            </button>
-            <button type="submit" className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <Save size={15} />
-              <span>{isEdit ? 'Simpan Perubahan Temuan' : 'Catat Temuan (NC Open)'}</span>
-            </button>
-          </div>
+          <FindingModalFooter
+            isAuditorOrDPA={isAuditorOrDPA}
+            isEdit={isEdit}
+            onClose={onClose}
+            setShowDeleteConfirm={setShowDeleteConfirm}
+          />
         </form>
       </div>
+
+      {/* In-app Confirm Delete Finding Modal */}
+      {(showDeleteConfirm) && (
+        <FindingDeleteConfirm
+          deleteAuditFinding={deleteAuditFinding}
+          finding={finding}
+          onClose={onClose}
+          setShowDeleteConfirm={setShowDeleteConfirm}
+        />
+      )}
     </div>
   );
 };

@@ -288,7 +288,7 @@ export const DocumentPreviewModal = ({ document: doc, onClose }) => {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <ShieldCheck size={15} color="#10b981" />
-            <span>Dokumen tersimpan aman dalam sistem Planned Maintenance System Armada</span>
+            <span>Dokumen tersimpan aman dalam Sistem PMS Armada Maritim</span>
           </div>
           <div>
             Format: <strong className="mono" style={{ color: 'var(--text-main)' }}>{isPdf ? 'PDF Dokumen Resmi' : isImage ? 'File Gambar / Scan' : 'Digital File'}</strong>

@@ -10,13 +10,14 @@ import {
   MapPin,
   ChevronRight
 } from 'lucide-react';
+import { makeId } from '../../utils/idUtils';
 
 export const LoginPage = () => {
   const { users, login, siteConfig } = usePMS();
 
   const cfg = siteConfig || {};
   const isLight = cfg.textColorTheme === 'light';
-  const [email, setEmail] = useState('admin@pms-maritim.id');
+  const [email, setEmail] = useState('admin@pms-maritim.com');
   const [password, setPassword] = useState('123');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
@@ -48,10 +49,14 @@ export const LoginPage = () => {
       };
     }
     // Bawaan
+    if (isLight) {
+      return {
+        backgroundColor: '#f1f5f9',
+        backgroundImage: 'linear-gradient(135deg, #e0f2fe 0%, #f0fdf4 40%, #f8fafc 100%)'
+      };
+    }
     return {
-      background: isLight
-        ? 'radial-gradient(ellipse at top left, #e0f2fe 0%, #f8fafc 60%, #f1f5f9 100%)'
-        : 'radial-gradient(ellipse at top left, #0c2340 0%, #060d19 60%, #030712 100%)'
+      backgroundImage: 'radial-gradient(ellipse at top, #0c1a30 0%, #060d19 100%)'
     };
   };
 
@@ -61,19 +66,26 @@ export const LoginPage = () => {
     setIsLoading(true);
 
     setTimeout(() => {
-      const queryEmail = email.trim().toLowerCase();
-      const matchedUser = users.find(u => u.email.toLowerCase() === queryEmail);
+      const query = email.trim().toLowerCase();
+      const matchedUser = users.find(
+        u => u.email.toLowerCase() === query || u.name.toLowerCase() === query
+      );
 
       if (matchedUser) {
-        login(matchedUser);
+        if (password === '123' || password === matchedUser.password) {
+          login(matchedUser);
+        } else {
+          setErrorMsg('Kata sandi salah. (Password demo: 123)');
+          setIsLoading(false);
+        }
       } else {
         const namePart = email.includes('@') ? email.split('@')[0] : email;
         const dynamicUser = {
-          id: `u-${Date.now()}`,
+          id: makeId('u'),
           name: namePart.toUpperCase(),
-          email: email.includes('@') ? email : `${namePart.toLowerCase()}@pms-maritim.id`,
+          email: email.includes('@') ? email : `${namePart.toLowerCase()}@pms-maritim.com`,
           role: 'Super Admin',
-          title: 'Operasional Armada',
+          title: 'Operasional Armada Maritim',
           shipAccess: 'All',
           avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80'
         };
@@ -99,9 +111,9 @@ export const LoginPage = () => {
         const dynamicUser = {
           id: `u-${usr.name.toLowerCase().replace(/\s+/g, '-')}`,
           name: usr.name,
-          email: usr.email || `${usr.name.toLowerCase().replace(/\s+/g, '')}@pms-maritim.id`,
+          email: usr.email || `${usr.name.toLowerCase().replace(/\s+/g, '')}@pms-maritim.com`,
           role: usr.role || 'Super Admin',
-          title: `${usr.role || 'Staff'} Operasional Armada`,
+          title: `${usr.role || 'Staff'} Operasional Armada Maritim`,
           shipAccess: 'All',
           avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80'
         };
@@ -112,16 +124,16 @@ export const LoginPage = () => {
     }, 300);
   };
 
-  // Demo Accounts
+  // 6 Demo Accounts matching Image 2
   const demoAccounts = (cfg.quickAccounts && cfg.quickAccounts.length > 0)
     ? cfg.quickAccounts
     : [
-        { name: 'Capt. Robert Sitorus', role: 'Super Admin', email: 'admin@pms-maritim.id' },
-        { name: 'Ir. H. Gunawan', role: 'Fleet Manager', email: 'fleet.ops@pms-maritim.id' },
-        { name: 'Capt. Hendra Gunawan', role: 'Admin Kapal / Nakhoda', email: 'nakhoda@pms-maritim.id' },
-        { name: 'Ir. Bambang Wijaya (KKM)', role: 'Teknisi / Chief Engineer', email: 'kkm@pms-maritim.id' },
-        { name: 'Suryadi Pratama', role: 'Crew / ABK', email: 'abk@pms-maritim.id' },
-        { name: 'Siti Rahmawati', role: 'HR / Personalia', email: 'hr@pms-maritim.id' }
+        { name: 'Capt. Robert Sitorus', role: 'Super Admin', email: 'admin@pms-maritim.com' },
+        { name: 'Ir. H. Gunawan', role: 'Fleet Manager', email: 'fleet.ops@pms-maritim.com' },
+        { name: 'Capt. Hendra Gunawan', role: 'Admin Kapal / Nakhoda', email: 'nakhoda@pms-maritim.com' },
+        { name: 'Ir. Bambang Wijaya (KKM)', role: 'Teknisi / Chief Engineer', email: 'kkm@pms-maritim.com' },
+        { name: 'Suryadi Pratama', role: 'Crew / ABK', email: 'abk@pms-maritim.com' },
+        { name: 'Siti Rahmawati', role: 'HR / Personalia', email: 'hr@pms-maritim.com' }
       ];
 
   const isGlass = cfg.formCardStyle === 'dark_glass';
@@ -225,13 +237,8 @@ export const LoginPage = () => {
             ) : cfg.logoMode === 'combined' ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <MaritimeEmblem size={44} />
-                <div style={{ width: '1px', height: '24px', background: isLight ? '#cbd5e1' : 'rgba(255,255,255,0.2)' }} />
-                <span style={{
-                  fontSize: '0.85rem',
-                  fontWeight: 800,
-                  color: isLight ? '#0369a1' : '#38bdf8',
-                  letterSpacing: '0.05em'
-                }}>
+                <div style={{ width: '2px', height: '28px', background: isLight ? '#cbd5e1' : 'rgba(255,255,255,0.2)' }} />
+                <span style={{ fontSize: '0.9rem', fontWeight: 800, color: isLight ? '#0369a1' : '#38bdf8', letterSpacing: '0.05em' }}>
                   BKI
                 </span>
               </div>
@@ -273,7 +280,7 @@ export const LoginPage = () => {
             maxWidth: '520px',
             margin: 0
           }}>
-            {cfg.portalDescription || 'Pusat sistem digital terintegrasi operasional armada kapal niaga, perawatan mesin (running hours), kepatuhan ISM Code & BKI, logistik suku cadang, dan pengawakan kru.'}
+            {cfg.portalDescription || 'Pusat sistem digital operasional armada kapal tunda (tugboat), tongkang, dan kapal kargo niaga perairan Kalimantan Barat dan jalur pelayaran Nusantara.'}
           </p>
 
           {/* Real Head Office Address Card */}
@@ -295,12 +302,12 @@ export const LoginPage = () => {
               <MapPin size={16} color={isLight ? '#0284c7' : '#38bdf8'} style={{ marginTop: '0.15rem', flexShrink: 0 }} />
               <div style={{ lineHeight: 1.5 }}>
                 <strong style={{ color: isLight ? '#0f172a' : '#ffffff' }}>Alamat Kantor Pusat:</strong>{' '}
-                {cfg.officeAddress || 'Kantor Pusat Operasional Armada Maritim • Indonesia'}
+                {cfg.officeAddress || 'Jl. Adi Sucipto KM 6, Kompleks Bahari Permai No. 2, RT. 004 / RW. 004, Desa Sungai Raya, Kec. Sungai Raya, Kab. Kubu Raya - Pontianak, Kalimantan Barat'}
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', fontSize: '0.75rem', marginLeft: '1.65rem' }}>
-              <span>📞 Telp: {cfg.officePhone || '+62 21 5000-PMS'}</span>
-              <span>✉️ {cfg.officeEmail || 'admin@pms-maritim.id'}</span>
+              <span>📞 Telp: {cfg.officePhone || '(021) 555-0199'}</span>
+              <span>✉️ {cfg.officeEmail || 'admin@pms-maritim.com'}</span>
             </div>
           </div>
         </div>
@@ -323,7 +330,7 @@ export const LoginPage = () => {
               {cfg.formTitle || 'Masuk ke Portal PMS'}
             </h2>
             <p style={{ fontSize: '0.825rem', color: isLight ? '#64748b' : '#94a3b8', marginTop: '0.35rem', margin: 0 }}>
-              {cfg.formSubtitle || 'Gunakan akun korporat Anda untuk mengakses sistem'}
+              {cfg.formSubtitle || 'Gunakan akun korporat Sistem PMS Armada Maritim'}
             </p>
           </div>
 
@@ -352,7 +359,7 @@ export const LoginPage = () => {
                 type="text"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder={cfg.usernamePlaceholder || 'admin@pms-maritim.id'}
+                placeholder={cfg.usernamePlaceholder || 'admin@pms-maritim.com'}
                 style={{
                   width: '100%',
                   padding: '0.75rem 1rem 0.75rem 2.5rem',
@@ -548,7 +555,7 @@ export const LoginPage = () => {
         color: isLight ? '#64748b' : '#94a3b8',
         zIndex: 10
       }}>
-        {cfg.footerText || (cfg.companyName ? `© ${new Date().getFullYear()} ${cfg.companyName} • All Rights Reserved` : '© 2026 Planned Maintenance System (PMS) • All Rights Reserved')}
+        {cfg.footerText || '© 2026 Sistem PMS Armada Maritim • All Rights Reserved'}
       </footer>
     </div>
   );

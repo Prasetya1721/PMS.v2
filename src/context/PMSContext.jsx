@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
+import { PMS_STORAGE_VERSION, initStorageVersion, loadStored, persistAllState } from '../utils/pmsStorage';
 import {
   INITIAL_VESSELS,
   INITIAL_EQUIPMENT,
@@ -20,11 +21,21 @@ import {
   INITIAL_SHIP_DOCUMENTS,
   INITIAL_NOTIFICATION_SETTINGS,
   INITIAL_NOTIFICATION_LOGS,
-  INITIAL_USERS,
-  INITIAL_ATTENDANCE,
-  INITIAL_KASBON
+  INITIAL_USERS
 } from '../data/initialData';
 import { createDefaultShipParticulars } from '../data/shipParticularsData';
+// Lima fungsi notifikasi dipindah ke ./logic/ dengan dependensi closure induk
+// diangkat menjadi PARAMETER. Diimpor dengan alias `Raw`, lalu di bawah dibuat
+// wrapper bernama sama yang mengikat parameter itu. Dengan begitu:
+//   * API ke konsumen (nilai context) tidak berubah sama sekali
+//   * semua call site internal yang sudah ada tetap valid tanpa disentuh
+import { resolveEmailRecipients as resolveEmailRecipientsRaw } from './logic/resolveEmailRecipients';
+import { getGoogleCalendarUrl as getGoogleCalendarUrlRaw } from './logic/getGoogleCalendarUrl';
+import { sendEmailReminder as sendEmailReminderRaw } from './logic/sendEmailReminder';
+import { sendWhatsAppReminder as sendWhatsAppReminderRaw } from './logic/sendWhatsAppReminder';
+import { exportMultiIntervalICS as exportMultiIntervalICSRaw } from './logic/exportMultiIntervalICS';
+import { DEFAULT_SITE_CONFIG } from './logic/DEFAULT_SITE_CONFIG';
+import { DEFAULT_MASTER_PORTS } from './logic/DEFAULT_MASTER_PORTS';
 import {
   CERTIFICATE_CATEGORIES,
   DEFAULT_MASTER_SURVEY_TYPES,
@@ -34,7 +45,9 @@ import {
   INITIAL_AUDITS,
   INITIAL_AUDIT_FINDINGS,
   ISM_DOC_ELEMENTS,
-  ISM_SMC_ELEMENTS
+  BKI_SMC_CHECKLIST_TEMPLATE,
+  ISM_SMC_ELEMENTS,
+  EXTERNAL_AUDIT_ORGANIZATIONS
 } from '../data/auditMasterData';
 import * as DEMO_DATA from '../data/sampleSeedData';
 import { calculateNCRange } from '../utils/auditTimeUtils';
@@ -53,128 +66,66 @@ import {
   ROLE_DEFINITIONS,
   ROLE_PERMISSIONS
 } from '../utils/rbac';
+import { makeId } from '../utils/idUtils';
 
 const PMSContext = createContext();
 
-const PMS_STORAGE_VERSION = 'v15-white-label-commercial';
-
-// Auto-purge stale localStorage if version mismatch occurs
-if (typeof window !== 'undefined') {
-  try {
-    const currentVersion = localStorage.getItem('pms_fleet_version');
-    if (currentVersion !== PMS_STORAGE_VERSION) {
-      console.log(`[PMS] Purging stale localStorage version (${currentVersion}) -> ${PMS_STORAGE_VERSION}`);
-      localStorage.clear();
-      localStorage.setItem('pms_fleet_version', PMS_STORAGE_VERSION);
-    }
-
-    // Bersihkan data master template agar kosong default sesuai permintaan user
-    const isMasterCleaned = localStorage.getItem('pms_master_templates_cleaned_v3');
-    if (!isMasterCleaned) {
-      localStorage.setItem('pms_documentTemplates', JSON.stringify([]));
-      localStorage.setItem('pms_master_templates_cleaned_v3', 'true');
-    }
-  } catch (err) {
-    console.error('[PMS] Storage purge check error:', err);
-  }
-}
+// Inisialisasi versi storage — purge otomatis jika versi berubah
+initStorageVersion();
 
 export const PMSProvider = ({ children }) => {
   // Load state from localStorage or fallback to initial data
-  const loadStored = (key, fallback) => {
-    try {
-      const version = localStorage.getItem('pms_fleet_version');
-      if (version !== PMS_STORAGE_VERSION) {
-        return fallback;
-      }
-      const saved = localStorage.getItem(`pms_${key}`);
-      if (!saved) return fallback;
-      const sanitized = saved
-        .replace(/Samarinda/gi, 'Pontianak')
-        .replace(/Balikpapan/gi, 'Ketapang')
-        .replace(/Muara Berau/gi, 'Muara Jungkat')
-        .replace(/Kalimantan Timur/gi, 'Kalimantan Barat')
-        .replace(/Sungai Mahakam/gi, 'Sungai Kapuas');
-      const parsed = JSON.parse(sanitized);
+  const load = (key, fallback) => loadStored(key, fallback, INITIAL_NOTIFICATION_SETTINGS);
 
-      if (key === 'vessels') {
-        if (!Array.isArray(parsed)) return fallback;
-        return parsed.map(v => {
-          let photo = v.photo;
-          if (!photo || photo.includes('photo-1544620347-c4fd4a3d5957')) {
-            photo = 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?auto=format&fit=crop&w=800&q=80';
-          }
-          return {
-            ...v,
-            photo,
-            particulars: v.particulars || createDefaultShipParticulars(v)
-          };
-        });
-      }
-
-      if (key === 'notificationSettings') {
-        if (!parsed || !parsed.thresholds || !parsed.autoSend || !parsed.thresholds.some(t => t.id === 'th-1d')) {
-          return fallback;
-        }
-        const ensureEmailChannel = (list) => (list || []).map(t => ({
-          ...t,
-          notifyChannels: Array.from(new Set([...(t.notifyChannels || []), 'Email'])),
-        }));
-        return {
-          ...fallback,
-          ...parsed,
-          thresholds: ensureEmailChannel(parsed.thresholds || fallback.thresholds),
-          customThresholds: ensureEmailChannel(parsed.customThresholds || fallback.customThresholds),
-          autoSend: {
-            ...fallback.autoSend,
-            ...(parsed.autoSend || {}),
-            channels: {
-              ...(fallback.autoSend?.channels || {}),
-              ...((parsed.autoSend || {}).channels || {}),
-            },
-            emailGateway: {
-              ...(fallback.autoSend?.emailGateway || {}),
-              ...((parsed.autoSend || {}).emailGateway || {}),
-            },
-          }
-        };
-      }
-      return parsed;
-    } catch {
-      return fallback;
+  const [vessels, setVessels] = useState(() => {
+    const loaded = load('vessels', INITIAL_VESSELS);
+    if (Array.isArray(loaded) && !loaded.some(v => v.name?.includes('RP 2004'))) {
+      const rp2004 = DEMO_DATA.INITIAL_VESSELS?.find(v => v.name?.includes('RP 2004'));
+      if (rp2004) return [...loaded, rp2004];
     }
-  };
-
-  const [vessels, setVessels] = useState(() => loadStored('vessels', INITIAL_VESSELS));
-  const [equipment, setEquipment] = useState(() => loadStored('equipment', INITIAL_EQUIPMENT));
-  const [schedules, setSchedules] = useState(() => loadStored('schedules', INITIAL_MAINTENANCE_SCHEDULES));
-  const [workOrders, setWorkOrders] = useState(() => loadStored('workOrders', INITIAL_WORK_ORDERS));
-  const [technicalWorkOrders, setTechnicalWorkOrders] = useState(() => loadStored('technicalWorkOrders', INITIAL_TECHNICAL_WORK_ORDERS || []));
-  const [dailyMachineryLogs, setDailyMachineryLogs] = useState(() => loadStored('dailyMachineryLogs', INITIAL_DAILY_MACHINERY_LOGS || []));
-  const [criticalEquipmentTests, setCriticalEquipmentTests] = useState(() => loadStored('criticalEquipmentTests', INITIAL_CRITICAL_EQUIPMENT_TESTS || []));
+    return loaded;
+  });
+  const [equipment, setEquipment] = useState(() => load('equipment', INITIAL_EQUIPMENT));
+  const [schedules, setSchedules] = useState(() => load('schedules', INITIAL_MAINTENANCE_SCHEDULES));
+  const [workOrders, setWorkOrders] = useState(() => load('workOrders', INITIAL_WORK_ORDERS));
+  const [technicalWorkOrders, setTechnicalWorkOrders] = useState(() => {
+    const stored = load('technicalWorkOrders', null);
+    if (Array.isArray(stored)) return stored;
+    return DEMO_DATA.INITIAL_TECHNICAL_WORK_ORDERS || INITIAL_TECHNICAL_WORK_ORDERS || [];
+  });
+  const [dailyMachineryLogs, setDailyMachineryLogs] = useState(() => {
+    const stored = load('dailyMachineryLogs', null);
+    if (Array.isArray(stored)) return stored;
+    return DEMO_DATA.INITIAL_DAILY_MACHINERY_LOGS || INITIAL_DAILY_MACHINERY_LOGS || [];
+  });
+  const [criticalEquipmentTests, setCriticalEquipmentTests] = useState(() => {
+    const stored = load('criticalEquipmentTests', null);
+    if (Array.isArray(stored)) return stored;
+    return DEMO_DATA.INITIAL_CRITICAL_EQUIPMENT_TESTS || INITIAL_CRITICAL_EQUIPMENT_TESTS || [];
+  });
   const [safeManningStandards, setSafeManningStandards] = useState(() => {
-    const stored = loadStored('safeManningStandards', null);
+    const stored = load('safeManningStandards', null);
     if (Array.isArray(stored)) return stored;
     return DEFAULT_SAFE_MANNING_STANDARDS || [];
   });
-  const [spareparts, setSpareparts] = useState(() => loadStored('spareparts', INITIAL_SPAREPARTS));
-  const [requisitions, setRequisitions] = useState(() => loadStored('requisitions', INITIAL_REQUISITIONS));
-  const [costs, setCosts] = useState(() => loadStored('costs', INITIAL_COSTS));
-  const [vesselBudgets, setVesselBudgets] = useState(() => loadStored('vesselBudgets', INITIAL_VESSEL_BUDGETS));
-  const [crew, setCrew] = useState(() => loadStored('crew', INITIAL_CREW));
-  const [leaves, setLeaves] = useState(() => loadStored('leaves', INITIAL_LEAVES));
-  const [drills, setDrills] = useState(() => loadStored('drills', INITIAL_DRILLS));
-  const [crewCertificates, setCrewCertificates] = useState(() => loadStored('crewCertificates', INITIAL_CREW_CERTIFICATES));
-  const [shipDocuments, setShipDocuments] = useState(() => loadStored('shipDocuments', INITIAL_SHIP_DOCUMENTS));
+  const [spareparts, setSpareparts] = useState(() => load('spareparts', INITIAL_SPAREPARTS));
+  const [requisitions, setRequisitions] = useState(() => load('requisitions', INITIAL_REQUISITIONS));
+  const [costs, setCosts] = useState(() => load('costs', INITIAL_COSTS));
+  const [vesselBudgets, setVesselBudgets] = useState(() => load('vesselBudgets', INITIAL_VESSEL_BUDGETS));
+  const [crew, setCrew] = useState(() => load('crew', INITIAL_CREW));
+  const [leaves, setLeaves] = useState(() => load('leaves', INITIAL_LEAVES));
+  const [drills, setDrills] = useState(() => load('drills', INITIAL_DRILLS));
+  const [crewCertificates, setCrewCertificates] = useState(() => load('crewCertificates', INITIAL_CREW_CERTIFICATES));
+  const [shipDocuments, setShipDocuments] = useState(() => load('shipDocuments', INITIAL_SHIP_DOCUMENTS));
   const [certificateCategories, setCertificateCategories] = useState(() => {
-    const stored = loadStored('certificateCategories', null);
+    const stored = load('certificateCategories', null);
     if (Array.isArray(stored)) {
       return stored;
     }
     return CERTIFICATE_CATEGORIES || [];
   });
   const [documentTemplates, setDocumentTemplates] = useState(() => {
-    const stored = loadStored('documentTemplates', null);
+    const stored = load('documentTemplates', null);
     if (Array.isArray(stored)) {
       return stored;
     }
@@ -189,75 +140,56 @@ export const PMSProvider = ({ children }) => {
       localStorage.setItem('pms_masterSurveyTypes', JSON.stringify([]));
       return [];
     }
-    const stored = loadStored('masterSurveyTypes', null);
+    const stored = load('masterSurveyTypes', null);
     if (Array.isArray(stored)) {
       return stored;
     }
     return DEFAULT_MASTER_SURVEY_TYPES || [];
   });
-  const [notificationSettings, setNotificationSettings] = useState(() => loadStored('notificationSettings', INITIAL_NOTIFICATION_SETTINGS));
-  const [notificationLogs, setNotificationLogs] = useState(() => loadStored('notificationLogs', INITIAL_NOTIFICATION_LOGS));
-  const [users, setUsers] = useState(() => loadStored('users', INITIAL_USERS));
-  const [audits, setAudits] = useState(() => loadStored('audits', INITIAL_AUDITS));
-  const [auditFindings, setAuditFindings] = useState(() => loadStored('auditFindings', INITIAL_AUDIT_FINDINGS));
-  const [attendance, setAttendance] = useState(() => loadStored('attendance', INITIAL_ATTENDANCE || []));
-  const [kasbon, setKasbon] = useState(() => loadStored('kasbon', INITIAL_KASBON || []));
+  const [notificationSettings, setNotificationSettings] = useState(() => load('notificationSettings', INITIAL_NOTIFICATION_SETTINGS));
+  const [notificationLogs, setNotificationLogs] = useState(() => load('notificationLogs', INITIAL_NOTIFICATION_LOGS));
+  const [users, setUsers] = useState(() => load('users', INITIAL_USERS));
+  const [audits, setAudits] = useState(() => {
+    // Migration: user requested default audit session kosong dan bersih
+    const migrationKey = 'pms_audits_clean_v4';
+    if (!localStorage.getItem(migrationKey)) {
+      localStorage.setItem(migrationKey, 'true');
+      localStorage.setItem('pms_audits', JSON.stringify([]));
+      localStorage.setItem('pms_auditFindings', JSON.stringify([]));
+      return [];
+    }
+    const loaded = load('audits', INITIAL_AUDITS);
+    if (Array.isArray(loaded)) {
+      return loaded.map(a => ({
+        ...a,
+        externalOrganization: typeof a.externalOrganization === 'object' && a.externalOrganization !== null
+          ? (a.externalOrganization.name || a.externalOrganization.shortName || 'Biro Klasifikasi Indonesia (BKI)')
+          : a.externalOrganization
+      }));
+    }
+    return INITIAL_AUDITS;
+  });
+  const [auditFindings, setAuditFindings] = useState(() => {
+    const loaded = load('auditFindings', INITIAL_AUDIT_FINDINGS);
+    if (Array.isArray(loaded)) {
+      return loaded.map(f => ({
+        ...f,
+        externalOrganization: typeof f.externalOrganization === 'object' && f.externalOrganization !== null
+          ? (f.externalOrganization.name || f.externalOrganization.shortName || 'Biro Klasifikasi Indonesia (BKI)')
+          : f.externalOrganization
+      }));
+    }
+    return INITIAL_AUDIT_FINDINGS;
+  });
 
   // CMS Site Configuration (login page content, branding, backgrounds)
   // CMS Site Configuration (login page content, branding, backgrounds)
-  const DEFAULT_SITE_CONFIG = {
-    // Tipe Latar Belakang: 'bawaan' | 'solid' | 'gradasi' | 'wallpaper'
-    bgType: 'wallpaper',
-    solidColor: '#0c1a30',
-    gradientFrom: '#0c1a30',
-    gradientVia: '#0f2942',
-    gradientTo: '#060d19',
-    gradientDirection: 'to bottom right',
-    wallpaperUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1600&q=80',
-    wallpaperBlur: 0,
-    wallpaperOverlay: 40,
-    glowBlobs: true,
-    glowColor1: 'rgba(2, 132, 199, 0.25)',
-    glowColor2: 'rgba(6, 182, 212, 0.2)',
-    // Tema Kontras: 'light' (Latar Terang) | 'dark' (Latar Gelap)
-    textColorTheme: 'light',
-
-    // Panel Kiri (Branding Perusahaan)
-    logoMode: 'maritime',
-    customLogoUrl: '',
-    companyBadge: 'ENTERPRISE PLANNED MAINTENANCE SYSTEM',
-    systemTitle: 'SISTEM PMS ARMADA MARITIM',
-    companySubtitle: 'Commercial Fleet Management & Technical Operations',
-    portalDescription: 'Pusat sistem digital terintegrasi operasional armada kapal niaga, perawatan mesin (running hours), kepatuhan ISM Code & BKI, logistik suku cadang, dan pengawakan kru.',
-    officeAddress: 'Kantor Pusat Operasional Armada Maritim • Indonesia',
-    officePhone: '+62 21 5000-PMS / +62 812-0000-0000',
-    officeEmail: 'admin@pms-maritim.id',
-
-    // Panel Kanan (Formulir Login)
-    formCardStyle: 'dark_glass',
-    formTitle: 'Masuk ke Portal PMS',
-    formSubtitle: 'Gunakan akun korporat Anda untuk mengakses sistem',
-    usernamePlaceholder: 'admin@pms-maritim.id',
-    passwordPlaceholder: '•••',
-    buttonText: 'Masuk ke Sistem PMS →',
-    showQuickLogin: true,
-    quickLoginLabel: '⚡ Akses Cepat Demo (Klik Akun):',
-    quickAccounts: [
-      { name: 'Capt. Robert Sitorus', role: 'Super Admin', email: 'admin@pms-maritim.id' },
-      { name: 'Ir. H. Gunawan', role: 'Fleet Manager', email: 'fleet.ops@pms-maritim.id' },
-      { name: 'Capt. Hendra Gunawan', role: 'Admin Kapal / Nakhoda', email: 'nakhoda@pms-maritim.id' },
-      { name: 'Ir. Bambang Wijaya (KKM)', role: 'Teknisi / Chief Engineer', email: 'kkm@pms-maritim.id' },
-      { name: 'Suryadi Pratama', role: 'Crew / ABK', email: 'abk@pms-maritim.id' },
-      { name: 'Siti Rahmawati', role: 'HR / Personalia', email: 'hr@pms-maritim.id' }
-    ],
-    formFooterNotice: '🔒 Sistem PMS Maritim Terpadu • ISM Code & Biro Klasifikasi Indonesia (BKI) Compliant',
-    footerText: '© 2026 Sistem Planned Maintenance System (PMS) • Hak Cipta Dilindungi'
-  };
+  
 
   const [siteConfig, setSiteConfig] = useState(() => {
-    const stored = loadStored('siteConfig', null);
+    const stored = load('siteConfig', null);
     if (stored && typeof stored === 'object') {
-      if (stored.systemTitle?.includes('BAHARIMAS') || stored.systemTitle?.includes('Baharimas') || stored.systemTitle?.includes('Nota Debit') || stored.logoMode === 'bki_group') {
+      if (stored.systemTitle?.includes('Nota Debit') || stored.logoMode === 'bki_group' || (stored.systemTitle && !stored.systemTitle.includes('ARMADA'))) {
         localStorage.setItem('pms_siteConfig', JSON.stringify(DEFAULT_SITE_CONFIG));
         return DEFAULT_SITE_CONFIG;
       }
@@ -278,12 +210,12 @@ export const PMSProvider = ({ children }) => {
   const resetSiteConfig = () => {
     setSiteConfig(DEFAULT_SITE_CONFIG);
     localStorage.setItem('pms_siteConfig', JSON.stringify(DEFAULT_SITE_CONFIG));
-    showToast('Konfigurasi dikembalikan ke standar default sistem.', 'info');
+    showToast('Konfigurasi dikembalikan ke default sistem.', 'info');
   };
 
   // Sidebar Visibility Overrides (Super Admin controls which modules each role can see)
   const [sidebarOverrides, setSidebarOverrides] = useState(() => {
-    const stored = loadStored('sidebarOverrides', null);
+    const stored = load('sidebarOverrides', null);
     return stored && typeof stored === 'object' ? stored : {};
   });
 
@@ -323,22 +255,10 @@ export const PMSProvider = ({ children }) => {
     'Oil Barge (Tongkang Minyak)'
   ];
 
-  const DEFAULT_MASTER_PORTS = [
-    'Pontianak',
-    'Ketapang',
-    'Kendawangan',
-    'Banjarmasin',
-    'Samarinda',
-    'Balikpapan',
-    'Jakarta',
-    'Surabaya',
-    'Batam',
-    'Kumai',
-    'Sampit'
-  ];
+  
 
-  const [vesselTypes, setVesselTypes] = useState(() => loadStored('vesselTypes', DEFAULT_VESSEL_TYPES));
-  const [portLocations, setPortLocations] = useState(() => loadStored('portLocations', DEFAULT_MASTER_PORTS));
+  const [vesselTypes, setVesselTypes] = useState(() => load('vesselTypes', DEFAULT_VESSEL_TYPES));
+  const [portLocations, setPortLocations] = useState(() => load('portLocations', DEFAULT_MASTER_PORTS));
 
   useEffect(() => {
     localStorage.setItem('pms_vesselTypes', JSON.stringify(vesselTypes));
@@ -394,7 +314,7 @@ export const PMSProvider = ({ children }) => {
     });
   };
 
-  // Authentication state for Planned Maintenance System
+  // Authentication state for Sistem PMS Armada Maritim
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const saved = localStorage.getItem('pms_current_user');
@@ -456,18 +376,10 @@ export const PMSProvider = ({ children }) => {
 
   const login = (userData) => {
     setCurrentUser(userData);
-    if (userData.token) {
-      localStorage.setItem('pms_auth_token', userData.token);
-    } else {
-      const mockToken = btoa(JSON.stringify({
-        id: userData.id,
-        email: userData.email,
-        role: userData.role,
-        time: Date.now()
-      }));
-      localStorage.setItem('pms_auth_token', mockToken);
-      if (!userData.token) {
-        userData = { ...userData, token: mockToken };
+    if (userData.role) {
+      setCurrentRoleState(userData.role);
+      if (!hasAccess(userData.role, activeTab)) {
+        setActiveTab('dashboard');
       }
     }
     localStorage.setItem('pms_current_user', JSON.stringify(userData));
@@ -477,7 +389,7 @@ export const PMSProvider = ({ children }) => {
   const logout = () => {
     setCurrentUser(null);
     localStorage.removeItem('pms_current_user');
-    showToast('Anda telah keluar dari sesi sistem PMS.', 'info');
+    showToast('Anda telah keluar dari sesi Sistem PMS.', 'info');
   };
 
   // Theme Mode: 'light' | 'dark' (defaults to 'light' with pure white background)
@@ -513,44 +425,19 @@ export const PMSProvider = ({ children }) => {
 
   // Sync to localStorage
   useEffect(() => {
-    try {
-      localStorage.setItem('pms_fleet_version', PMS_STORAGE_VERSION);
-      localStorage.setItem('pms_vessels', JSON.stringify(vessels || []));
-      localStorage.setItem('pms_equipment', JSON.stringify(equipment || []));
-      localStorage.setItem('pms_schedules', JSON.stringify(schedules || []));
-      localStorage.setItem('pms_workOrders', JSON.stringify(workOrders || []));
-      localStorage.setItem('pms_technicalWorkOrders', JSON.stringify(technicalWorkOrders || []));
-      localStorage.setItem('pms_dailyMachineryLogs', JSON.stringify(dailyMachineryLogs || []));
-      localStorage.setItem('pms_criticalEquipmentTests', JSON.stringify(criticalEquipmentTests || []));
-      localStorage.setItem('pms_safeManningStandards', JSON.stringify(safeManningStandards || []));
-      localStorage.setItem('pms_spareparts', JSON.stringify(spareparts || []));
-      localStorage.setItem('pms_requisitions', JSON.stringify(requisitions || []));
-      localStorage.setItem('pms_costs', JSON.stringify(costs || []));
-      localStorage.setItem('pms_vessel_budgets', JSON.stringify(vesselBudgets || []));
-      localStorage.setItem('pms_crew', JSON.stringify(crew || []));
-      localStorage.setItem('pms_leaves', JSON.stringify(leaves || []));
-      localStorage.setItem('pms_drills', JSON.stringify(drills || []));
-      localStorage.setItem('pms_crewCertificates', JSON.stringify(crewCertificates || []));
-      localStorage.setItem('pms_shipDocuments', JSON.stringify(shipDocuments || []));
-      localStorage.setItem('pms_certificateCategories', JSON.stringify(certificateCategories || []));
-      localStorage.setItem('pms_documentTemplates', JSON.stringify(documentTemplates || []));
-      localStorage.setItem('pms_notificationSettings', JSON.stringify(notificationSettings || {}));
-      localStorage.setItem('pms_notificationLogs', JSON.stringify(notificationLogs || []));
-      localStorage.setItem('pms_users', JSON.stringify(users || []));
-      localStorage.setItem('pms_audits', JSON.stringify(audits || []));
-      localStorage.setItem('pms_auditFindings', JSON.stringify(auditFindings || []));
-      localStorage.setItem('pms_attendance', JSON.stringify(attendance || []));
-      localStorage.setItem('pms_kasbon', JSON.stringify(kasbon || []));
-      localStorage.setItem('pms_siteConfig', JSON.stringify(siteConfig || {}));
-      localStorage.setItem('pms_sidebarOverrides', JSON.stringify(sidebarOverrides || {}));
-    } catch (err) {
-      console.error('[PMS] Failed to sync state to localStorage:', err);
-    }
+    persistAllState({
+      vessels, equipment, schedules, workOrders, technicalWorkOrders,
+      dailyMachineryLogs, criticalEquipmentTests, safeManningStandards,
+      spareparts, requisitions, costs, vesselBudgets, crew, leaves, drills,
+      crewCertificates, shipDocuments, certificateCategories, documentTemplates,
+      notificationSettings, notificationLogs, users, audits, auditFindings,
+      siteConfig, sidebarOverrides,
+    });
   }, [
     vessels, equipment, schedules, workOrders, technicalWorkOrders, dailyMachineryLogs, criticalEquipmentTests, safeManningStandards,
     spareparts, requisitions, costs, vesselBudgets, crew, leaves, drills, crewCertificates, shipDocuments,
     certificateCategories, documentTemplates, notificationSettings, notificationLogs, users,
-    audits, auditFindings, attendance, kasbon, siteConfig, sidebarOverrides
+    audits, auditFindings, siteConfig, sidebarOverrides
   ]);
 
 
@@ -599,7 +486,7 @@ export const PMSProvider = ({ children }) => {
     }
 
     const newEq = {
-      id: `eq-${Date.now()}`,
+      id: makeId('eq'),
       vesselId: equipmentData.vesselId || (vessels[0]?.id || 'v-001'),
       code: equipmentData.code?.trim() || `EQ-${Math.floor(100 + Math.random() * 900)}`,
       name: equipmentData.name?.trim() || 'Equipment Baru',
@@ -825,7 +712,7 @@ export const PMSProvider = ({ children }) => {
 
     // Record log into dailyMachineryLogs
     const newLog = {
-      id: `dml-${Date.now()}`,
+      id: makeId('dml'),
       vesselId,
       logDate,
       loggedBy: metadata.loggedBy || 'Masinis Jaga',
@@ -847,7 +734,7 @@ export const PMSProvider = ({ children }) => {
   const logCriticalEquipmentTest = (testData) => {
     const newTest = {
       ...testData,
-      id: `cet-${Date.now()}`,
+      id: makeId('cet'),
       recordedAt: new Date().toISOString()
     };
     setCriticalEquipmentTests(prev => [newTest, ...prev]);
@@ -1125,7 +1012,7 @@ export const PMSProvider = ({ children }) => {
     const targetType = itemData.target || (itemData.category?.toLowerCase().includes('crew') || itemData.category?.toLowerCase().includes('bama') || itemData.category?.toLowerCase().includes('apd') ? 'Crew' : 'Kapal');
     const newItem = {
       ...itemData,
-      id: `log-${Date.now()}`,
+      id: makeId('log'),
       code: itemData.code?.trim() || `LOG-${Math.floor(1000 + Math.random() * 9000)}`,
       vesselId: itemData.vesselId || 'v-001',
       target: targetType,
@@ -1233,7 +1120,7 @@ export const PMSProvider = ({ children }) => {
     }
 
     confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
-    showToast(`Barang permintaan ${reqId} telah resmi diterima di atas kapal! Stok onboard bertambah.`, 'success');
+    showToast(`Barang SPBK ${reqId} telah resmi diterima di atas kapal KM. RP 2020! Stok onboard bertambah.`, 'success');
   };
 
   // 3B. Finance & Vessel Budget Management Actions
@@ -1244,7 +1131,7 @@ export const PMSProvider = ({ children }) => {
         return [
           {
             ...updatedBudgetData,
-            id: budgetId || `bud-${Date.now()}`,
+            id: budgetId || makeId('bud'),
             lastUpdated: new Date().toISOString().split('T')[0]
           },
           ...prev
@@ -1266,7 +1153,7 @@ export const PMSProvider = ({ children }) => {
   const addExpenseTransaction = (expenseData) => {
     const newCost = {
       ...expenseData,
-      id: expenseData.id || `cost-${Date.now().toString().slice(-4)}`,
+      id: expenseData.id || makeId('cost'),
       date: expenseData.date || new Date().toISOString().split('T')[0],
       amount: Number(expenseData.amount) || 0,
       vesselId: expenseData.vesselId || 'v-001'
@@ -1331,7 +1218,7 @@ export const PMSProvider = ({ children }) => {
   const addCrew = (newCrewMember) => {
     const c = {
       ...newCrewMember,
-      id: `crew-${Date.now()}`,
+      id: makeId('crew'),
       leaveBalanceDays: newCrewMember.leaveBalanceDays || 14,
       status: newCrewMember.status || 'Onboard'
     };
@@ -1366,7 +1253,7 @@ export const PMSProvider = ({ children }) => {
   const submitLeave = (leaveData) => {
     const newLeave = {
       ...leaveData,
-      id: `leave-${Date.now()}`,
+      id: makeId('leave'),
       appliedDate: new Date().toISOString().split('T')[0],
       status: 'Pending Ship Admin'
     };
@@ -1377,7 +1264,7 @@ export const PMSProvider = ({ children }) => {
   const addDrill = (drillData) => {
     const d = {
       ...drillData,
-      id: `drill-${Date.now()}`,
+      id: makeId('drill'),
       conductedDate: drillData.conductedDate || new Date().toISOString().split('T')[0]
     };
     setDrills(prev => [d, ...prev]);
@@ -1386,14 +1273,14 @@ export const PMSProvider = ({ children }) => {
 
   // 4c. User Management Actions
   const addUser = (userData) => {
-    const newId = `u-${Date.now()}`;
+    const newId = makeId('u');
     const newUser = {
       id: newId,
       name: userData.name?.trim() || 'Pengguna Baru',
-      email: userData.email?.toLowerCase().trim() || `user_${Date.now()}@pms-maritim.id`,
+      email: userData.email?.toLowerCase().trim() || `user_${Date.now()}@pms-maritim.com`,
       password: userData.password || '123',
       role: userData.role || 'Admin Kapal / Nakhoda',
-      title: userData.title?.trim() || 'Staff Operasional Armada',
+      title: userData.title?.trim() || 'Staff Operasional Armada Maritim',
       shipAccess: userData.shipAccess || 'All',
       phone: userData.phone || '081288990011',
       status: userData.status || 'Aktif',
@@ -1462,7 +1349,7 @@ export const PMSProvider = ({ children }) => {
   // 4b. Vessel & Ship Document Actions
   const addVessel = (vesselData) => {
     try {
-      const newId = `v-${Date.now()}`;
+      const newId = makeId('v');
       const typeStr = String(vesselData?.type || 'Tugboat Twin Screw');
       const isBarge = typeStr.toLowerCase().includes('tongkang') || typeStr.toLowerCase().includes('barge');
       const cleanReg = String(vesselData?.regNo || '').trim();
@@ -1479,10 +1366,10 @@ export const PMSProvider = ({ children }) => {
         yearBuilt: Number(vesselData?.yearBuilt) || new Date().getFullYear(),
         speedKnots: Number(vesselData?.speedKnots) || (isBarge ? 0 : 8.0),
         flag: vesselData?.flag || "Indonesia (IDN)",
-        portOfRegistry: vesselData?.portOfRegistry || "Pelabuhan Pendaftaran Armada",
+        portOfRegistry: vesselData?.portOfRegistry || "Pontianak, Kalimantan Barat",
         status: vesselData?.status || "Operasional (Berlayar)",
         ownershipStatus: vesselData?.ownershipStatus || "As Owner & Operator",
-        currentLocation: vesselData?.currentLocation || "Pelabuhan Operasional",
+        currentLocation: vesselData?.currentLocation || "Sungai Kapuas, Pontianak",
         builder: vesselData?.builder || "PT Galangan Kapal Nusantara",
         masterCaptain: vesselData?.masterCaptain || "",
         chiefEngineer: vesselData?.chiefEngineer || "",
@@ -1600,7 +1487,7 @@ export const PMSProvider = ({ children }) => {
 
     const newDoc = {
       ...docData,
-      id: `doc-s-${Date.now()}`,
+      id: makeId('doc-s'),
       category: docData.category || 'KSOP',
       issueDate: issue,
       expiryDate: expiry,
@@ -1750,7 +1637,7 @@ export const PMSProvider = ({ children }) => {
     if (!newTmpl || !newTmpl.name) return null;
     const name = newTmpl.name.trim();
     const category = newTmpl.category || 'BKI';
-    const id = newTmpl.id || `cn-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const id = newTmpl.id || makeId(`cn-${Math.floor(Math.random() * 1000)}`);
 
     const created = {
       id,
@@ -1810,7 +1697,7 @@ export const PMSProvider = ({ children }) => {
     const name = newSurvey.name.trim();
     const category = newSurvey.category || 'BKI';
     const intervalYears = newSurvey.intervalYears !== undefined ? Number(newSurvey.intervalYears) : 1;
-    const id = newSurvey.id || `st-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const id = newSurvey.id || makeId(`st-${Math.floor(Math.random() * 1000)}`);
 
     const created = {
       id,
@@ -1873,22 +1760,28 @@ export const PMSProvider = ({ children }) => {
 
     const newAudit = {
       ...auditData,
-      id: `aud-${Date.now()}`,
+      id: makeId('aud'),
       auditNo,
+      reportId: auditData.reportId || `${siteConfig?.companyName || 'SISTEM PMS'} - ${auditData.targetName || 'Armada'} - ${auditNo}`,
+      docRevision: auditData.docRevision || 'F23.14.06-2024 Rev 05',
       auditType: auditData.auditType || 'Internal',
+      externalOrganization: auditData.externalOrganization || (auditData.auditType === 'External' ? 'Biro Klasifikasi Indonesia (BKI)' : null),
       standard: std,
       targetType: auditData.targetType || (std === 'DOC' ? 'Office' : 'Vessel'),
-      targetName: auditData.targetName || (auditData.vesselId ? (vessels.find(v => v.id === auditData.vesselId)?.name || 'Kapal Armada') : (siteConfig?.companyName ? `Kantor Pusat ${siteConfig.companyName}` : 'Kantor Pusat Operasional')),
+      targetName: auditData.targetName || (auditData.vesselId ? (vessels.find(v => v.id === auditData.vesselId)?.name || 'Kapal Armada') : 'Kantor Pusat Operasional Armada'),
+      areaUnderAudit: auditData.areaUnderAudit || auditData.targetName || '',
       vesselId: auditData.vesselId || null,
-      leadAuditor: auditData.leadAuditor || (isInt ? 'DPA / Lead Auditor Internal' : 'Surveyor BKI / Ditjen Hubla'),
+      leadAuditor: auditData.leadAuditor || (isInt ? 'DPA / Lead Auditor Internal Armada' : 'MUHSON NURROCHMAT S'),
       auditTeam: Array.isArray(auditData.auditTeam) ? auditData.auditTeam : (auditData.auditTeam ? [auditData.auditTeam] : ['Tim Inspektor Keselamatan']),
-      auditee: auditData.auditee || (std === 'DOC' ? 'Direktur Operasional & DPA' : 'Nakhoda & KKM'),
+      auditee: auditData.auditee || (std === 'DOC' ? 'Direktur Operasional & DPA' : 'CAPT. EKHSAN (Nakhoda)'),
+      auditLocation: auditData.auditLocation || 'PULANG PISAU',
       auditDate: auditData.auditDate || new Date().toISOString().split('T')[0],
       targetCloseDate: auditData.targetCloseDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       scope: auditData.scope || `Audit ${auditData.auditType || 'Internal'} Kepatuhan ISM Code Standar ${std}.`,
       status: auditData.status || 'In Progress',
       totalItemsChecked: Number(auditData.totalItemsChecked) || 20,
       itemsComplied: Number(auditData.itemsComplied) || 18,
+      checklist: auditData.checklist || [],
       findingsSummary: auditData.findingsSummary || {
         majorNC: 0,
         minorNC: 0,
@@ -1918,60 +1811,112 @@ export const PMSProvider = ({ children }) => {
   };
 
   const deleteAuditSession = (auditId) => {
-    const target = audits.find(a => a.id === auditId);
+    if (!auditId) return;
+    const cleanId = String(auditId).trim().toLowerCase();
+    let deletedLabel = String(auditId).trim();
+
     setAudits(prev => {
-      const next = prev.filter(a => a.id !== auditId);
-      localStorage.setItem('pms_audits', JSON.stringify(next));
+      const target = prev.find(a =>
+        String(a.id || '').trim().toLowerCase() === cleanId ||
+        String(a.auditNo || '').trim().toLowerCase() === cleanId
+      );
+      const targetId = target?.id ? String(target.id).trim().toLowerCase() : cleanId;
+      const targetNo = target?.auditNo ? String(target.auditNo).trim().toLowerCase() : cleanId;
+      if (target?.auditNo) deletedLabel = target.auditNo;
+
+      const next = prev.filter(a => {
+        const aId = String(a.id || '').trim().toLowerCase();
+        const aNo = String(a.auditNo || '').trim().toLowerCase();
+        if (aId === targetId || aId === cleanId) return false;
+        if (aNo === targetNo || aNo === cleanId) return false;
+        return true;
+      });
+
+      try {
+        localStorage.setItem('pms_audits', JSON.stringify(next));
+      } catch (err) {
+        console.error('Failed saving pms_audits:', err);
+      }
       return next;
     });
+
     setAuditFindings(prev => {
-      const next = prev.filter(f => f.auditId !== auditId);
-      localStorage.setItem('pms_auditFindings', JSON.stringify(next));
+      const next = prev.filter(f => {
+        const fAuditId = String(f.auditId || '').trim().toLowerCase();
+        const fAuditNo = String(f.auditNo || '').trim().toLowerCase();
+        if (fAuditId === cleanId) return false;
+        if (deletedLabel && fAuditNo === deletedLabel.toLowerCase()) return false;
+        return true;
+      });
+
+      try {
+        localStorage.setItem('pms_auditFindings', JSON.stringify(next));
+      } catch (err) {
+        console.error('Failed saving pms_auditFindings:', err);
+      }
       return next;
     });
-    showToast(`Sesi audit ${target?.auditNo || auditId} berhasil dihapus.`, 'info');
+
+    showToast(`✓ Sesi audit "${deletedLabel}" berhasil dihapus.`, 'info');
   };
 
   const addAuditFinding = (findingData) => {
     const std = findingData.standard || 'DOC';
+    const year = new Date().getFullYear();
     const randomNum = Math.floor(Math.random() * 9000 + 1000);
     const findingNo = findingData.findingNo?.trim() || `NC-${std}-${randomNum}`;
 
     const newFinding = {
       ...findingData,
-      id: `nc-${Date.now()}`,
+      id: makeId('nc'),
       findingNo,
+      reportId: findingData.reportId || `0859 - PK/ISM- SMC /${year}`,
+      areaUnderAudit: findingData.areaUnderAudit || findingData.targetName || (findingData.vesselId ? (vessels.find(v => v.id === findingData.vesselId)?.name) : 'Kantor Pusat'),
+      elementNumberOfCode: findingData.elementNumberOfCode || findingData.clauseCode || '5.1.5',
       auditId: findingData.auditId || (audits[0]?.id || 'aud-doc-001'),
       auditNo: findingData.auditNo || (audits.find(a => a.id === findingData.auditId)?.auditNo || 'AUD-ISM'),
       auditType: findingData.auditType || 'Internal',
+      externalOrganization: findingData.externalOrganization || null,
       standard: std,
       targetName: findingData.targetName || (findingData.vesselId ? (vessels.find(v => v.id === findingData.vesselId)?.name) : 'Kantor Pusat'),
       vesselId: findingData.vesselId || null,
-      clauseCode: findingData.clauseCode || 'ISM-10',
-      clauseName: findingData.clauseName || 'Pemeliharaan Kapal & Perlengkapan',
-      category: findingData.category || 'Minor NC',
-      status: 'NC Open',
+      clauseCode: findingData.clauseCode || '5.1.5',
+      clauseName: findingData.clauseName || 'Tanggung Jawab & Wewenang Nakhoda',
+      category: findingData.category || 'Non-Conformity',
+      status: findingData.status || 'NC Open',
       description: findingData.description || '',
       objectiveEvidence: findingData.objectiveEvidence || '',
       dateIdentified: findingData.dateIdentified || new Date().toISOString().split('T')[0],
       dueDate: findingData.dueDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      assignedTo: findingData.assignedTo || 'PIC Terkait',
-      auditor: findingData.auditor || 'Lead Auditor',
+      agreedDate: findingData.agreedDate || findingData.dueDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      assignedTo: findingData.assignedTo || 'Nakhoda / Master',
+      auditor: findingData.auditor || 'MUHSON NURROCHMAT S',
+      auditee: findingData.auditee || 'CAPT. EKHSAN',
+      correction: findingData.correction || '',
+      rootCause: findingData.rootCause || '',
+      correctiveAction: findingData.correctiveAction || '',
+      verifiedUpgradeDowngrade: findingData.verifiedUpgradeDowngrade || null,
+      verifiedSatisfactory: findingData.verifiedSatisfactory ?? null,
+      auditorSignatureDate: findingData.auditorSignatureDate || null,
+      auditeeSignatureDate: findingData.auditeeSignatureDate || null,
       linkedRequisitionId: findingData.linkedRequisitionId || null,
       linkedRequisitionTitle: findingData.linkedRequisitionTitle || null,
       linkedCertificateId: findingData.linkedCertificateId || null,
       evidence: {
-        hasSubmitted: false,
-        submissionDate: null,
-        submittedBy: null,
-        rootCause: null,
-        correctiveAction: null,
-        preventiveAction: null,
-        fileUrl: null,
-        fileName: null,
-        fileSize: null,
-        auditorReviewNotes: null,
-        closedDate: null
+        hasSubmitted: findingData.evidence?.hasSubmitted || false,
+        submissionDate: findingData.evidence?.submissionDate || null,
+        submittedBy: findingData.evidence?.submittedBy || null,
+        correction: findingData.evidence?.correction || findingData.correction || null,
+        rootCause: findingData.evidence?.rootCause || findingData.rootCause || null,
+        correctiveAction: findingData.evidence?.correctiveAction || findingData.correctiveAction || null,
+        preventiveAction: findingData.evidence?.preventiveAction || null,
+        fileUrl: findingData.evidence?.fileUrl || null,
+        fileName: findingData.evidence?.fileName || null,
+        fileSize: findingData.evidence?.fileSize || null,
+        auditorReviewNotes: findingData.evidence?.auditorReviewNotes || null,
+        closedDate: findingData.evidence?.closedDate || null,
+        verifiedUpgradeDowngrade: findingData.evidence?.verifiedUpgradeDowngrade || null,
+        verifiedSatisfactory: findingData.evidence?.verifiedSatisfactory ?? null
       }
     };
 
@@ -2014,13 +1959,36 @@ export const PMSProvider = ({ children }) => {
   };
 
   const deleteAuditFinding = (findingId) => {
-    const target = auditFindings.find(f => f.id === findingId);
+    if (!findingId) return;
+    const cleanId = String(findingId).trim().toLowerCase();
+    let deletedLabel = String(findingId).trim();
+
     setAuditFindings(prev => {
-      const next = prev.filter(f => f.id !== findingId);
-      localStorage.setItem('pms_auditFindings', JSON.stringify(next));
+      const target = prev.find(f =>
+        String(f.id || '').trim().toLowerCase() === cleanId ||
+        String(f.findingNo || '').trim().toLowerCase() === cleanId
+      );
+      const targetId = target?.id ? String(target.id).trim().toLowerCase() : cleanId;
+      const targetNo = target?.findingNo ? String(target.findingNo).trim().toLowerCase() : cleanId;
+      if (target?.findingNo) deletedLabel = target.findingNo;
+
+      const next = prev.filter(f => {
+        const fId = String(f.id || '').trim().toLowerCase();
+        const fNo = String(f.findingNo || '').trim().toLowerCase();
+        if (fId === targetId || fId === cleanId) return false;
+        if (fNo === targetNo || fNo === cleanId) return false;
+        return true;
+      });
+
+      try {
+        localStorage.setItem('pms_auditFindings', JSON.stringify(next));
+      } catch (err) {
+        console.error('Failed saving pms_auditFindings:', err);
+      }
       return next;
     });
-    showToast(`Temuan ${target?.findingNo || findingId} berhasil dihapus.`, 'info');
+
+    showToast(`✓ Temuan "${deletedLabel}" berhasil dihapus.`, 'info');
   };
 
   const submitAuditEvidence = (findingId, evidenceData) => {
@@ -2118,7 +2086,7 @@ export const PMSProvider = ({ children }) => {
   const addCustomThreshold = (days, label, description, notifyChannels) => {
     const numDays = Math.max(1, parseInt(days, 10) || 1);
     const newTh = {
-      id: `th-custom-${Date.now()}`,
+      id: makeId('th-custom'),
       days: numDays,
       unit: 'custom',
       label: label?.trim() || `H-${numDays} Hari (Kustom)`,
@@ -2235,181 +2203,26 @@ export const PMSProvider = ({ children }) => {
     return newTime;
   };
 
-  // WhatsApp Sender with tailored messages per interval & optional direct API Gateway
-  const sendWhatsAppReminder = async (item, type = 'crew_cert', options = {}) => {
-    let phone = '6281200000000';
-    let recipientName = 'Crew / Admin';
-    const offsetDays = options.offsetDays !== undefined ? Number(options.offsetDays) : (item.daysUntilExpiry || 30);
 
-    const v = vessels.find(ship => ship.id === item.vesselId);
-    const vesselName = v?.name || 'Fleet';
 
-    if (type === 'crew_cert') {
-      const targetCrew = crew.find(c => c.id === item.crewId);
-      phone = targetCrew?.whatsapp || '6281288991122';
-      recipientName = targetCrew?.name || item.crewName;
-    } else if (type === 'ship_doc') {
-      recipientName = `Admin Kapal & Nakhoda ${vesselName}`;
-      phone = '6281288991122';
-    } else if (type === 'work_order') {
-      recipientName = item.assignedTo || 'Teknisi / Chief Engineer';
-      phone = '6281288991122';
-    } else if (type === 'audit_nc_open') {
-      recipientName = options.recipientName || item.assignedTo || `Nakhoda & KKM ${item.targetName || vesselName}`;
-      phone = options.phone || '6281288991122';
-    } else if (type === 'audit_nc_close') {
-      recipientName = options.recipientName || 'DPA & Marine Superintendent';
-      phone = options.phone || '6281288991122';
-    }
+  // ---- Wrapper pengikat untuk fungsi notifikasi yang dipindah ke ./logic/ ----
+  // Badan fungsi kini tinggal di modul sendiri dan menerima dependensi induk
+  // sebagai parameter; di sini parameter itu diikat sekali. Tanda tangan yang
+  // dilihat pemanggil TIDAK berubah, jadi konsumen context tidak perlu diubah.
+  const resolveEmailRecipients = (item, type = 'crew_cert', options = {}) =>
+    resolveEmailRecipientsRaw(item, type, options, notificationSettings, users, crew);
 
-    let headerPrefix = '*🔔 PEMBERITAHUAN JATUH TEMPO DOKUMEN*';
-    let urgencyBadge = 'Rentang 30 Hari';
-    if (offsetDays === 1) {
-      headerPrefix = '*🚨 PERINGATAN DARURAT H-1 (HARI TERAKHIR)*';
-      urgencyBadge = 'H-1 Hari';
-    } else if (offsetDays === 7) {
-      headerPrefix = '*⚠️ PERINGATAN KRITIS H-1 MINGGU (H-7)*';
-      urgencyBadge = 'H-1 Minggu';
-    } else if (offsetDays === 30) {
-      headerPrefix = '*🔔 PEMBERITAHUAN JATUH TEMPO H-1 BULAN (H-30)*';
-      urgencyBadge = 'H-1 Bulan';
-    } else if (offsetDays === 365) {
-      headerPrefix = '*📋 PERSIAPAN ANGGARAN DINI H-1 TAHUN (H-365)*';
-      urgencyBadge = 'H-1 Tahun';
-    } else if (offsetDays > 0) {
-      headerPrefix = `*📌 PENGINGAT JATUH TEMPO H-${offsetDays} HARI*`;
-      urgencyBadge = `H-${offsetDays} Hari`;
-    }
+  const getGoogleCalendarUrl = (item, options = {}) =>
+    getGoogleCalendarUrlRaw(item, options, notificationSettings, vessels);
 
-    let msg = options.customMessage;
-    if (!msg) {
-      if (type === 'audit_nc_open') {
-        const range = calculateNCRange(item);
-        const lateInfo = range?.isOverdue
-          ? `🚨 STATUS: MELEWATI BATAS WAKTU (${Math.abs(range.remainingDays)} Hari Overdue)!`
-          : `⏳ STATUS: NC TERBUKA (Berjalan ${range?.activeDays} hari, sisa ${range?.remainingDays} hari)`;
+  const sendEmailReminder = async (item, type = 'crew_cert', options = {}) =>
+    sendEmailReminderRaw(item, type, options, notificationSettings, vessels, resolveEmailRecipients, setNotificationLogs, showToast);
 
-        msg = `*🚨 NOTIFIKASI TEMUAN AUDIT ISM CODE (NC OPEN)*\n` +
-          `_${siteConfig?.companyName || 'Sistem PMS Armada'} - SMS & ISM Code_\n\n` +
-          `Kepada Yth: *${recipientName}*\n` +
-          `Kapal / Entitas: *${item.targetName || vesselName}*\n` +
-          `No. Temuan: *${item.findingNo}* [${item.category}]\n` +
-          `Klausul ISM: *${item.clauseCode} - ${item.clauseName}*\n` +
-          `Standar Audit: *${item.standard} (ISM Code)*\n\n` +
-          `*Deskripsi Ketidaksesuaian:*\n"${item.description}"\n\n` +
-          `*📅 RENTANG WAKTU TINDAKAN KOREKTIF (CAP):*\n` +
-          `• Tanggal Audit Terbuka: *${range?.openDateStr || item.dateIdentified}*\n` +
-          `• Target Batas Close: *${range?.dueDateStr || item.dueDate}*\n` +
-          `• ${lateInfo}\n\n` +
-          `*INSTRUKSI AUDITEE KAPAL:*\n` +
-          `Harap segera mengajukan rencana tindakan korektif (CAP) dan mengunggah dokumen/foto eviden perbaikan di Portal PMS sebelum batas waktu berakhir.\n\n` +
-          `_Pusat Pengendali Kepatuhan Armada ${siteConfig?.companyName || 'Sistem PMS'}_`;
-        urgencyBadge = range?.isOverdue ? 'NC Overdue' : 'NC Open';
-      } else if (type === 'audit_nc_close') {
-        const range = calculateNCRange(item);
-        msg = `*✅ NOTIFIKASI PENUTUPAN TEMUAN AUDIT (NC CLOSE)*\n` +
-          `_${siteConfig?.companyName || 'Sistem PMS Armada'} - SMS & ISM Code_\n\n` +
-          `Kepada Yth: *${recipientName}*\n` +
-          `Kapal / Entitas: *${item.targetName || vesselName}*\n` +
-          `No. Temuan: *${item.findingNo}* [${item.category}]\n` +
-          `Klausul ISM: *${item.clauseCode} - ${item.clauseName}*\n` +
-          `Standar Audit: *${item.standard} (ISM Code)*\n\n` +
-          `*HASIL VERIFIKASI & CLOSING:*\n` +
-          `Tindakan koreksi dan dokumen eviden perbaikan telah diverifikasi efektif oleh Lead Auditor DPA / Surveyor BKI. Status temuan resmi dinyatakan *NC CLOSE (TUNTAS)*.\n\n` +
-          `*⏱️ LAPORAN EFISIENSI RENTANG WAKTU (LEAD TIME):*\n` +
-          `• Tanggal Dibuka: *${range?.openDateStr || item.dateIdentified}*\n` +
-          `• Target Awal: *${range?.dueDateStr || item.dueDate}*\n` +
-          `• Tanggal Ditutup Resmi: *${range?.closedDateStr || 'Selesai'}*\n` +
-          `• Durasi Penyelesaian: *${range?.resolutionDays || 1} Hari* (${range?.varianceText || 'Sesuai Target'})\n\n` +
-          `Status Kepatuhan: *100% COMPLIANT (IMO ISM CODE & BKI)*\n\n` +
-          `_Pusat Pengendali Kepatuhan Armada ${siteConfig?.companyName || 'Sistem PMS'}_`;
-        urgencyBadge = 'NC Close Tuntas';
-      } else if (type === 'crew_cert') {
-        msg = `${headerPrefix} - ${siteConfig?.systemTitle || 'SISTEM PMS ARMADA MARITIM'}\n\n` +
-          `Yth. *${recipientName}*,\n` +
-          `Sertifikat Anda: *${item.name}* (No: ${item.certificateNo})\n` +
-          `Tanggal Jatuh Tempo: *${item.expiryDate}* (${item.daysUntilExpiry} hari lagi).\n\n` +
-          (offsetDays <= 1
-            ? `PENTING: Besok adalah hari terakhir masa berlaku! Harap segera lapor Nakhoda untuk pengurusan darurat kelaiklautan.\n\n`
-            : offsetDays <= 7
-            ? `PENTING: Tersisa 1 minggu sebelum sertifikat habis masa berlaku. Mohon koordinasikan dengan personalia kapal.\n\n`
-            : offsetDays <= 30
-            ? `Harap segera memproses perpanjangan sertifikasi ke Bagian Personalia agar kelaiklautan kapal tetap terjaga.\n\n`
-            : offsetDays <= 365
-            ? `Pemberitahuan awal 1 tahun untuk persiapan pembaharuan sertifikat kepelautan STCW.\n\n`
-            : `Harap koordinasikan pembaruan dokumen ini tepat waktu.\n\n`) +
-          `_Sistem PMS Armada Maritim_`;
-      } else if (type === 'ship_doc') {
-        msg = `${headerPrefix} - ${siteConfig?.systemTitle || 'SISTEM PMS ARMADA'}\n\n` +
-          `Kepada: *${recipientName}*\n` +
-          `Dokumen: *${item.name}* (No: ${item.documentNo})\n` +
-          `Kapal: *${vesselName}*\n` +
-          `Tanggal Jatuh Tempo: *${item.expiryDate}* (${item.daysUntilExpiry} hari lagi).\n\n` +
-          (offsetDays <= 1
-            ? `TINDAKAN MENDESAK: Sertifikat akan kadaluarsa besok! Pastikan dispensasi atau survey BKI/Syahbandar telah terkonfirmasi.\n\n`
-            : offsetDays <= 7
-            ? `PERHATIAN KRITIS: Tersisa 7 hari. Konfirmasi jadwal kedatangan surveyor BKI/Syahbandar ke atas kapal.\n\n`
-            : offsetDays <= 30
-            ? `Segera daftarkan permohonan survey ke Kantor BKI / Syahbandar terdekat.\n\n`
-            : offsetDays <= 365
-            ? `Perencanaan anggaran survey besar & pembaharuan sertifikat kelas untuk tahun anggaran mendatang.\n\n`
-            : `Segera tindak lanjuti sebelum batas toleransi habis.\n\n`) +
-          `_Pusat Pengendali Armada PMS ${siteConfig?.companyName || 'Sistem PMS'}_`;
-      } else {
-        msg = `*PERINGATAN WORK ORDER OVERDUE*\n\nKepada: *${recipientName}*\nWork Order: *${item.title}* (ID: ${item.id})\nStatus: OVERDUE\nTarget: ${item.targetHours} Jam (Saat ini: ${item.currentRunningHours} Jam).\n\nHarap segera menindaklanjuti servicing.`;
-      }
-    }
+  const sendWhatsAppReminder = async (item, type = 'crew_cert', options = {}) =>
+    sendWhatsAppReminderRaw(item, type, options, notificationSettings, vessels, crew, setNotificationLogs, showToast);
 
-    const cleanPhone = phone.replace(/[^0-9]/g, '');
-    const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
-
-    const gateway = notificationSettings.autoSend?.whatsappGateway;
-    let deliveryStatus = 'Delivered';
-    let channelLabel = 'WhatsApp Direct';
-
-    // Direct API Gateway dispatch if API key provided and requested
-    if (options.useGatewayApi && gateway?.apiKey && gateway?.apiUrl) {
-      try {
-        await fetch(gateway.apiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': gateway.apiKey },
-          body: JSON.stringify({ phone: cleanPhone, message: msg })
-        });
-        deliveryStatus = `Delivered (${gateway.provider})`;
-        channelLabel = `WhatsApp API (${gateway.provider})`;
-      } catch (err) {
-        console.warn('API Gateway send error, falling back to URL:', err);
-      }
-    }
-
-    // Log to notification audit
-    const newLog = {
-      id: `notif-${Date.now()}`,
-      timestamp: new Date().toLocaleString('id-ID'),
-      channel: channelLabel,
-      target: `${recipientName} (${phone})`,
-      vesselName: item.targetName || vesselName,
-      subject: type === 'audit_nc_open'
-        ? `Notifikasi NC Open: ${item.findingNo} (${item.targetName || vesselName})`
-        : type === 'audit_nc_close'
-        ? `Notifikasi NC Close: ${item.findingNo} (${item.targetName || vesselName})`
-        : `Reminder ${urgencyBadge}: ${item.name || item.title}`,
-      message: msg,
-      status: deliveryStatus,
-      thresholdTriggered: urgencyBadge
-    };
-
-    setNotificationLogs(prev => [newLog, ...prev]);
-
-    if (!options.silent) {
-      if (!options.useGatewayApi || !gateway?.apiKey) {
-        window.open(waUrl, '_blank');
-      }
-      showToast(`Pesan WhatsApp telah disiapkan & dibuka ke ${recipientName} (${urgencyBadge})`, 'success');
-    }
-
-    return newLog;
-  };
+  const exportMultiIntervalICS = (filterOffset = null) =>
+    exportMultiIntervalICSRaw(filterOffset, notificationSettings, vessels, crewCertificates, shipDocuments, showToast);
 
   // Helper specifically for sending Audit NC Open / Close WhatsApp notifications
   const sendAuditWhatsAppNotification = async (finding, notificationType = 'open', options = {}) => {
@@ -2417,180 +2230,16 @@ export const PMSProvider = ({ children }) => {
     return await sendWhatsAppReminder(finding, type, options);
   };
 
-  // Email recipient resolver (backend-ready: uses users + gateway defaults)
-  const resolveEmailRecipients = (item, type = 'crew_cert', options = {}) => {
-    const gateway = { ...DEFAULT_EMAIL_GATEWAY, ...(notificationSettings.autoSend?.emailGateway || {}) };
-    const defaults = normalizeEmailList(gateway.defaultRecipients?.length ? gateway.defaultRecipients : ['operations@pms-maritim.id']);
-    if (options.to) return normalizeEmailList(options.to);
-    if (options.recipientEmail) return normalizeEmailList(options.recipientEmail);
-    const userEmailByRole = (keyword) => {
-      const u = (users || []).find(x => (x.role || '').toLowerCase().includes(keyword.toLowerCase()));
-      return u?.email || null;
-    };
-    if (type === 'crew_cert') {
-      const targetCrew = crew.find(c => c.id === item.crewId);
-      const crewEmail = targetCrew?.email || null;
-      return normalizeEmailList([crewEmail, userEmailByRole('HR'), userEmailByRole('Nakhoda'), ...defaults].filter(Boolean));
-    }
-    if (type === 'ship_doc') return normalizeEmailList([userEmailByRole('Nakhoda'), userEmailByRole('Fleet'), 'nakhoda@pms-maritim.id', ...defaults]);
-    if (type === 'work_order') return normalizeEmailList([userEmailByRole('Teknisi'), userEmailByRole('Chief'), 'kkm@pms-maritim.id', ...defaults]);
-    if (type === 'audit_nc_open') return normalizeEmailList([options.email || null, userEmailByRole('Nakhoda'), userEmailByRole('Fleet'), ...defaults].filter(Boolean));
-    if (type === 'audit_nc_close') return normalizeEmailList([options.email || null, userEmailByRole('Super Admin'), 'admin@pms-maritim.id', ...defaults].filter(Boolean));
-    return defaults;
-  };
 
-  // Email Sender — otomatis + backend-ready (mailto fallback saat backend belum ada)
-  const sendEmailReminder = async (item, type = 'crew_cert', options = {}) => {
-    const offsetDays = options.offsetDays !== undefined ? Number(options.offsetDays) : (item.daysUntilExpiry ?? 30);
-    const v = vessels.find(ship => ship.id === item.vesselId);
-    const vesselName = v?.name || item.targetName || 'Fleet';
-    const gateway = { ...DEFAULT_EMAIL_GATEWAY, ...(notificationSettings.autoSend?.emailGateway || {}) };
-    const toList = resolveEmailRecipients(item, type, options);
-    if (!toList.length) {
-      if (!options.silent) showToast('Alamat email penerima tidak ditemukan. Isi Email Gateway / data user dulu.', 'warning');
-      return null;
-    }
-    let urgencyBadge = `H-${offsetDays} Hari`;
-    if (offsetDays === 1) urgencyBadge = 'H-1 Hari';
-    else if (offsetDays === 7) urgencyBadge = 'H-1 Minggu';
-    else if (offsetDays === 30) urgencyBadge = 'H-1 Bulan';
-    else if (offsetDays === 365) urgencyBadge = 'H-1 Tahun';
 
-    const docNo = item.certificateNo || item.documentNo || item.findingNo || '-';
-    let subject = options.customSubject;
-    let textBody = options.customMessage ? stripWhatsappMarkdown(options.customMessage) : '';
-    if (!subject) {
-      if (type === 'audit_nc_open') subject = `[NC OPEN] ${item.findingNo} — ${item.targetName || vesselName}`;
-      else if (type === 'audit_nc_close') subject = `[NC CLOSE] ${item.findingNo} — ${item.targetName || vesselName}`;
-      else if (type === 'work_order') subject = `[WO OVERDUE] ${item.title} — ${vesselName}`;
-      else subject = `[PMS ${urgencyBadge}] ${item.name} — ${vesselName} (Jatuh tempo ${item.expiryDate})`;
-    }
-    if (!textBody) {
-      if (type === 'audit_nc_open' || type === 'audit_nc_close') {
-        textBody = `Kepada Yth. Penerima,\n\nTemuan audit ${item.findingNo} (${item.category || ''}) pada ${item.targetName || vesselName} — status ${type === 'audit_nc_open' ? 'NC OPEN' : 'NC CLOSE'}.\nKlausul: ${item.clauseCode || ''} - ${item.clauseName || ''}\nDeskripsi: ${item.description || ''}\nTarget close: ${item.dueDate || '-'}\n\nMohon tindak lanjut via Portal PMS.\n\n_Sistem PMS Armada Maritim_`;
-      } else if (type === 'work_order') {
-        textBody = `Kepada Teknisi,\n\nWork Order ${item.title} (ID: ${item.id}) status OVERDUE.\nTarget: ${item.targetHours} jam (saat ini ${item.currentRunningHours} jam).\nKapal: ${vesselName}\n\nHarap segera menindaklanjuti servicing.\n\n_Sistem PMS Armada_`;
-      } else {
-        textBody = `Kepada Yth. Penerima,\n\nDokumen/Sertifikat: ${item.name} (No: ${docNo})\nKapal/Pemilik: ${item.crewName ? `Kru ${item.crewName}` : vesselName}\nJatuh tempo: ${item.expiryDate} (${item.daysUntilExpiry ?? offsetDays} hari lagi) — ${urgencyBadge}\nPenerbit: ${item.issuer || '-'}\n\nMohon segera proses perpanjangan ke BKI/Syahbandar/personalia sebelum batas toleransi habis.\n\n_Pusat Pengendali Armada PMS ${siteConfig?.companyName || 'Sistem PMS'}_`;
-      }
-    }
-    const html = buildEmailHtml({
-      preheader: subject,
-      title: subject,
-      badge: urgencyBadge,
-      rows: [
-        { label: 'Kapal / Entitas', value: vesselName },
-        { label: 'Dokumen / Temuan', value: `${item.name || item.title || item.findingNo || '-'}` },
-        { label: 'Nomor', value: docNo },
-        { label: 'Jatuh Tempo', value: `${item.expiryDate || item.dueDate || '-'}` },
-      ],
-      bodyText: textBody,
-    });
-    const payload = buildEmailPayload({ to: toList, cc: options.cc, bcc: options.bcc, subject, text: textBody, html, meta: { type, vesselName, offsetDays } });
-    // Coba backend dulu (otomatis, tanpa buka tab). Kalau backend belum ada -> status Queued.
-    const backendRes = await sendEmailViaBackend(payload, gateway);
-    const channelLabel = backendRes.ok ? `Email Auto (${gateway.provider})` : 'Email Auto';
-    const newLog = {
-      id: `notif-email-${Date.now()}`,
-      timestamp: new Date().toLocaleString('id-ID'),
-      channel: channelLabel,
-      target: payload.to.join(', '),
-      vesselName: item.targetName || vesselName,
-      subject,
-      message: textBody,
-      status: backendRes.status,
-      thresholdTriggered: urgencyBadge,
-    };
-    setNotificationLogs(prev => [newLog, ...prev]);
-    if (!options.silent) {
-      if (backendRes.ok) {
-        showToast(`Email otomatis terkirim ke ${payload.to.join(', ')} (${urgencyBadge})`, 'success');
-      } else {
-        // Fallback frontend-only: buka aplikasi email agar user bisa kirim sekarang,
-        // log tetap tercatat sebagai Queued agar tidak hilang saat backend hadir.
-        if (!options.skipMailto) window.open(buildMailtoUrl(payload.to, subject, textBody), '_self');
-        showToast(`Backend email belum aktif — draf email dibuka & dicatat sebagai antrean (${payload.to.join(', ')})`, 'info');
-      }
-    }
-    return { ...newLog, backend: backendRes, payload };
-  };
+
 
   const sendAuditEmailNotification = async (finding, notificationType = 'open', options = {}) => {
     const type = notificationType === 'open' ? 'audit_nc_open' : 'audit_nc_close';
     return await sendEmailReminder(finding, type, options);
   };
 
-  // Google Calendar URL Generator with custom offset days and scheduled hour
-  const getGoogleCalendarUrl = (item, options = {}) => {
-    // options: { offsetDays: 0 | 1 | 7 | 30 | 365 | number, eventTime: '08:00' }
-    const offsetDays = options.offsetDays !== undefined ? Number(options.offsetDays) : 30;
-    const eventTime = options.eventTime || notificationSettings.autoSend?.scheduleTime || '08:00';
-    const [evHH, evMM] = eventTime.split(':').map(Number);
 
-    const vessel = vessels.find(v => v.id === item.vesselId);
-    const vesselName = vessel?.name || 'Armada Kapal';
-    const docNo = item.certificateNo || item.documentNo || '-';
-    const holder = item.crewName ? `Kru: ${item.crewName}` : `Kapal: ${vesselName}`;
-
-    let startIso = '';
-    let endIso = '';
-
-    if (item.expiryDate) {
-      const [year, month, day] = item.expiryDate.split('-').map(Number);
-      const targetDate = new Date(year, month - 1, day);
-
-      if (offsetDays > 0) {
-        targetDate.setDate(targetDate.getDate() - offsetDays);
-      }
-
-      const tYear = targetDate.getFullYear();
-      const tMonth = String(targetDate.getMonth() + 1).padStart(2, '0');
-      const tDay = String(targetDate.getDate()).padStart(2, '0');
-
-      const startH = String(evHH || 8).padStart(2, '0');
-      const startM = String(evMM || 0).padStart(2, '0');
-      const endH = String(Math.min(23, (evHH || 8) + 1)).padStart(2, '0');
-      const endM = startM;
-
-      startIso = `${tYear}${tMonth}${tDay}T${startH}${startM}00`;
-      endIso = `${tYear}${tMonth}${tDay}T${endH}${endM}00`;
-    }
-
-    let intervalLabel = 'H-30 (1 Bulan)';
-    if (offsetDays === 1) intervalLabel = 'H-1 (1 Hari Terakhir)';
-    else if (offsetDays === 7) intervalLabel = 'H-7 (1 Minggu)';
-    else if (offsetDays === 30) intervalLabel = 'H-30 (1 Bulan)';
-    else if (offsetDays === 365) intervalLabel = 'H-365 (1 Tahun Persiapan)';
-    else if (offsetDays === 0) intervalLabel = 'JATUH TEMPO HARI-H';
-    else if (offsetDays > 0) intervalLabel = `H-${offsetDays} Hari`;
-
-    const title = `[PMS ${intervalLabel}] ${item.name} (${vesselName})`;
-    const details = `PENGINGAT RESMI SISTEM PMS ARMADA:\n` +
-      `----------------------------------------\n` +
-      `Kategori Peringatan: ${intervalLabel}\n` +
-      `Waktu Pengingat: Jam ${eventTime} WIB\n` +
-      `Nama Dokumen/Sertifikat: ${item.name}\n` +
-      `Nomor Dokumen: ${docNo}\n` +
-      `Subjek/Pemilik: ${holder}\n` +
-      `Kapal: ${vesselName}\n` +
-      `Instansi Penerbit: ${item.issuer || '-'}\n` +
-      `Tanggal Jatuh Tempo: ${item.expiryDate} (${item.daysUntilExpiry} hari lagi)\n` +
-      `Status Kelaikan: ${item.status}\n\n` +
-      `INSTRUKSI TINDAK LANJUT:\n` +
-      (offsetDays === 1
-        ? `🚨 DARURAT: Hari ini/besok masa berlaku habis! Segera hubungi Syahbandar/BKI untuk dispensasi atau survey mendesak.`
-        : offsetDays === 7
-        ? `⚠️ KRITIS: Tersisa 7 hari. Pastikan surveyor telah ditunjuk dan dokumen persiapan kapal siap di pelabuhan.`
-        : offsetDays === 30
-        ? `🔔 FORMAL: Masuk jendela survei perpanjangan 30 hari. Hubungi Bagian Legal Armada & BKI Surveyor.`
-        : offsetDays === 365
-        ? `📋 TAHUNAN: Rencanakan anggaran docking & survey pembaharuan (Renewal Survey) tahun depan.`
-        : `Segera tindak lanjuti sebelum batas toleransi survey habis.`);
-
-    const location = `${vesselName}, Pelabuhan Pendaftaran ${vessel?.portOfRegistry || 'Pontianak, Kalimantan Barat'}`;
-
-    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${startIso}/${endIso}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(location)}`;
-  };
 
   const openGoogleCalendar = (item, options = {}) => {
     const url = getGoogleCalendarUrl(item, options);
@@ -2605,7 +2254,7 @@ export const PMSProvider = ({ children }) => {
     else if (offsetDays === 365) tagLabel = 'H-1 Tahun';
 
     const newLog = {
-      id: `notif-${Date.now()}`,
+      id: makeId('notif'),
       timestamp: new Date().toLocaleString('id-ID'),
       channel: 'Google Calendar Sync',
       target: `Google Calendar (${item.crewName || vesselName})`,
@@ -2621,83 +2270,7 @@ export const PMSProvider = ({ children }) => {
     showToast(`Google Calendar dibuka untuk event pengingat ${tagLabel} pukul ${eventTime} WIB: ${item.name}`, 'success');
   };
 
-  // Export .ics calendar file with multi-alarm (1 Hari, 1 Minggu, 1 Bulan, 1 Tahun, Kustom)
-  const exportMultiIntervalICS = (filterOffset = null) => {
-    const activeThresholds = [
-      ...(notificationSettings.thresholds || []).filter(t => t.enabled),
-      ...(notificationSettings.customThresholds || []).filter(t => t.enabled)
-    ];
 
-    const allItems = [
-      ...crewCertificates.map(c => ({ ...c, itemCategory: 'crew_cert' })),
-      ...shipDocuments.map(d => ({ ...d, itemCategory: 'ship_doc' }))
-    ];
-
-    let targetItems = allItems;
-    if (filterOffset !== null) {
-      targetItems = allItems.filter(i => i.daysUntilExpiry !== undefined && i.daysUntilExpiry <= filterOffset && i.daysUntilExpiry >= -30);
-    } else {
-      const maxDays = Math.max(...activeThresholds.map(t => t.days), 365);
-      targetItems = allItems.filter(i => i.daysUntilExpiry !== undefined && i.daysUntilExpiry <= maxDays && i.daysUntilExpiry >= -30);
-    }
-
-    if (targetItems.length === 0) {
-      showToast('Tidak ada dokumen yang cocok dengan ambang batas yang dipilih.', 'info');
-      return;
-    }
-
-    let icsContent = [
-      'BEGIN:VCALENDAR',
-      'VERSION:2.0',
-      'PRODID:-//Sistem PMS Armada Maritim//PMS Statutory Multi-Alarm Calendar//ID',
-      'CALSCALE:GREGORIAN',
-      'METHOD:PUBLISH',
-      `X-WR-CALNAME:${siteConfig?.companyName || 'Sistem PMS'} - Dokumen & Sertifikat Kapal`,
-      'X-WR-TIMEZONE:Asia/Jakarta'
-    ];
-
-    targetItems.forEach((item, idx) => {
-      const vessel = vessels.find(v => v.id === item.vesselId);
-      const vesselName = vessel?.name || 'Kapal';
-      const cleanDate = item.expiryDate ? item.expiryDate.replace(/-/g, '') : '20260918';
-      const eventTime = notificationSettings.autoSend?.scheduleTime?.replace(':', '') || '0800';
-
-      icsContent.push(
-        'BEGIN:VEVENT',
-        `UID:pms-cert-${item.id}-${idx}@pms-maritim.id`,
-        `DTSTAMP:${cleanDate}T${eventTime}00Z`,
-        `DTSTART;VALUE=DATE:${cleanDate}`,
-        `SUMMARY:[PMS JATUH TEMPO] ${item.name} (${vesselName})`,
-        `DESCRIPTION:Pengingat jatuh tempo dokumen ${item.name} (No: ${item.certificateNo || item.documentNo}). Pemegang: ${item.crewName || vesselName}. Segera lakukan perpanjangan kelaiklautan kapal.`,
-        `LOCATION:${vesselName}, ${vessel?.portOfRegistry || 'Indonesia'}`
-      );
-
-      // Add VALARM for each active threshold
-      activeThresholds.forEach(th => {
-        icsContent.push(
-          'BEGIN:VALARM',
-          'ACTION:DISPLAY',
-          `DESCRIPTION:Pengingat ${th.label} - Dokumen ${item.name}`,
-          `TRIGGER:-P${th.days}D`,
-          'END:VALARM'
-        );
-      });
-
-      icsContent.push('END:VEVENT');
-    });
-
-    icsContent.push('END:VCALENDAR');
-
-    const blob = new Blob([icsContent.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
-    const link = document.createElement('a');
-    link.href = window.URL.createObjectURL(blob);
-    link.setAttribute('download', `PMS_MultiAlarm_Calendar_${new Date().toISOString().split('T')[0]}.ics`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    showToast(`File .ics multi-alarm berhasil diunduh (${targetItems.length} dokumen dengan alarm 1 hari, 1 minggu, 1 bulan, 1 tahun)!`, 'success');
-  };
 
   // Alias for backward compatibility
   const exportH30CalendarICS = () => exportMultiIntervalICS(30);
@@ -2751,7 +2324,7 @@ export const PMSProvider = ({ children }) => {
       const wantsEmail = emailEnabled && (m.threshold.notifyChannels || []).includes('Email');
       if (wantsWA) {
         newLogs.push({
-          id: `notif-auto-wa-${Date.now()}-${m.item.id}-${m.threshold.days}`,
+          id: makeId(`notif-auto-wa-${m.item.id}-${m.threshold.days}`),
           timestamp: new Date().toLocaleString('id-ID'),
           channel: `WhatsApp Auto (${m.threshold.label})`,
           target: recipient,
@@ -2765,7 +2338,7 @@ export const PMSProvider = ({ children }) => {
       if (wantsEmail) {
         const toList = resolveEmailRecipients(m.item, m.item.itemCategory || 'ship_doc', { offsetDays: m.threshold.days });
         const subject = `[PMS ${m.threshold.label}] ${m.item.name} — ${v?.name || 'Fleet'} (Jatuh tempo ${m.item.expiryDate})`;
-        const textBody = `Pemberitahuan Otomatis ${m.threshold.label}: Dokumen ${m.item.name} akan jatuh tempo pada ${m.item.expiryDate} (${m.item.daysUntilExpiry} hari lagi).\nKapal: ${v?.name || 'Fleet'}\nNomor: ${m.item.certificateNo || m.item.documentNo || '-'}\n\nMohon tindak lanjut sebelum batas toleransi habis.\n\n_Sistem PMS ${siteConfig?.companyName || 'Armada Maritim'}_`;
+        const textBody = `Pemberitahuan Otomatis ${m.threshold.label}: Dokumen ${m.item.name} akan jatuh tempo pada ${m.item.expiryDate} (${m.item.daysUntilExpiry} hari lagi).\nKapal: ${v?.name || 'Fleet'}\nNomor: ${m.item.certificateNo || m.item.documentNo || '-'}\n\nMohon tindak lanjut sebelum batas toleransi habis.\n\n_Sistem PMS Armada Maritim_`;
         let emailStatus = 'Queued (Menunggu Backend)';
         try {
           const payload = buildEmailPayload({
@@ -2781,7 +2354,7 @@ export const PMSProvider = ({ children }) => {
           emailStatus = 'Queued (Menunggu Backend)';
         }
         newLogs.push({
-          id: `notif-auto-email-${Date.now()}-${m.item.id}-${m.threshold.days}`,
+          id: makeId(`notif-auto-email-${m.item.id}-${m.threshold.days}`),
           timestamp: new Date().toLocaleString('id-ID'),
           channel: `Email Auto (${m.threshold.label})`,
           target: (toList.length ? toList.join(', ') : recipient),
@@ -2886,9 +2459,6 @@ export const PMSProvider = ({ children }) => {
     setEquipment([]);
     setSchedules([]);
     setWorkOrders([]);
-    setTechnicalWorkOrders([]);
-    setDailyMachineryLogs([]);
-    setCriticalEquipmentTests([]);
     setSpareparts([]);
     setRequisitions([]);
     setCosts([]);
@@ -2904,8 +2474,6 @@ export const PMSProvider = ({ children }) => {
     setNotificationLogs([]);
     setAudits([]);
     setAuditFindings([]);
-    setAttendance([]);
-    setKasbon([]);
     setSelectedVesselId('all');
 
     localStorage.setItem('pms_vessels', JSON.stringify([]));
@@ -2930,8 +2498,6 @@ export const PMSProvider = ({ children }) => {
     localStorage.setItem('pms_technicalWorkOrders', JSON.stringify([]));
     localStorage.setItem('pms_dailyMachineryLogs', JSON.stringify([]));
     localStorage.setItem('pms_criticalEquipmentTests', JSON.stringify([]));
-    localStorage.setItem('pms_attendance', JSON.stringify([]));
-    localStorage.setItem('pms_kasbon', JSON.stringify([]));
 
     showToast('Seluruh data dummy berhasil dikosongkan. Sistem bersih dan siap diinput dari nol!', 'info');
   };
@@ -3071,6 +2637,8 @@ export const PMSProvider = ({ children }) => {
   const lowStockCount = filteredSpareparts.filter(s => s.status === 'Low Stock' || s.status === 'Critical').length;
   const openNCCount = filteredAuditFindings.filter(f => f.status === 'NC Open' || f.status === 'Eviden Submitted').length;
   const closedNCCount = filteredAuditFindings.filter(f => f.status === 'NC Close').length;
+  const smcOpenNCCount = (auditFindings || []).filter(f => (f.standard === 'SMC' || f.vesselId) && (f.status === 'NC Open' || f.status === 'Eviden Submitted')).length;
+  const docOpenNCCount = (auditFindings || []).filter(f => (f.standard === 'DOC' || !f.vesselId) && (f.status === 'NC Open' || f.status === 'Eviden Submitted')).length;
 
   // Items within 1 month (H-30) of expiry: daysUntilExpiry <= 30
   const h30ExpiringItems = [
@@ -3106,150 +2674,6 @@ export const PMSProvider = ({ children }) => {
 
   const ownerVessels = vessels.filter(v => !v.id.startsWith('v-op-') && v.ownershipStatus !== 'As Operator');
   const operatorVessels = vessels.filter(v => v.id.startsWith('v-op-') || v.ownershipStatus === 'As Operator');
-
-  // Filtered Attendance & Kasbon (v2 integrations)
-  const filteredAttendance = selectedVesselId === 'all'
-    ? attendance
-    : attendance.filter(a => a.shipId === selectedVesselId || a.vesselId === selectedVesselId);
-
-  const filteredKasbon = selectedVesselId === 'all'
-    ? kasbon
-    : kasbon.filter(k => k.shipId === selectedVesselId || k.vesselId === selectedVesselId);
-
-  const addAttendanceRecord = (record) => {
-    const newRecord = {
-      ...record,
-      id: `att-${Date.now()}`
-    };
-    setAttendance(prev => [newRecord, ...prev]);
-    showToast(`Presensi ${record.crewName} berhasil disimpan.`, 'success');
-  };
-
-  const addKasbonRequest = (req) => {
-    const newReq = {
-      ...req,
-      id: `ksb-${Date.now()}`,
-      requestNo: `KSB-${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(Math.floor(Math.random() * 900) + 100)}`,
-      requestDate: new Date().toISOString().split('T')[0],
-      monthlyDeduction: Math.round(Number(req.amount || 0) / Number(req.tenorMonths || 1)),
-      status: 'Menunggu Persetujuan Nakhoda',
-      approvals: {
-        captainApproved: false,
-        captainDate: null,
-        financeApproved: false,
-        financeDate: null,
-        disbursedDate: null
-      },
-      paidAmount: 0,
-      remainingAmount: Number(req.amount || 0),
-      paymentHistory: []
-    };
-    setKasbon(prev => [newReq, ...prev]);
-    showToast(`Pengajuan kasbon ${req.crewName} sebesar Rp ${Number(req.amount).toLocaleString('id-ID')} berhasil diajukan!`, 'success');
-  };
-
-  const approveKasbonCaptain = (id) => {
-    setKasbon(prev => prev.map(k => {
-      if (k.id === id) {
-        return {
-          ...k,
-          status: 'Disetujui Nakhoda (Menunggu Finance)',
-          approvals: {
-            ...k.approvals,
-            captainApproved: true,
-            captainDate: new Date().toISOString().split('T')[0]
-          }
-        };
-      }
-      return k;
-    }));
-    showToast('Kasbon berhasil disetujui Nakhoda.', 'success');
-  };
-
-  const approveKasbonFinance = (id) => {
-    setKasbon(prev => prev.map(k => {
-      if (k.id === id) {
-        return {
-          ...k,
-          status: 'Disetujui Finance / Siap Cair',
-          approvals: {
-            ...k.approvals,
-            financeApproved: true,
-            financeDate: new Date().toISOString().split('T')[0]
-          }
-        };
-      }
-      return k;
-    }));
-    showToast('Kasbon disetujui Finance dan siap dicairkan.', 'success');
-  };
-
-  const disburseKasbon = (id) => {
-    setKasbon(prev => prev.map(k => {
-      if (k.id === id) {
-        return {
-          ...k,
-          status: 'Dicairkan',
-          approvals: {
-            ...k.approvals,
-            disbursedDate: new Date().toISOString().split('T')[0]
-          }
-        };
-      }
-      return k;
-    }));
-    showToast('Dana kasbon berhasil dicairkan kepada kru.', 'success');
-  };
-
-  const recordKasbonPayment = (id, amount, method) => {
-    const payNum = Number(amount) || 0;
-    setKasbon(prev => prev.map(k => {
-      if (k.id === id) {
-        const newPaid = (k.paidAmount || 0) + payNum;
-        const newRemaining = Math.max(0, (k.amount || 0) - newPaid);
-        const isLunas = newRemaining <= 0;
-        const newHistory = [
-          ...(k.paymentHistory || []),
-          {
-            date: new Date().toISOString().split('T')[0],
-            amount: payNum,
-            method: method
-          }
-        ];
-        return {
-          ...k,
-          paidAmount: newPaid,
-          remainingAmount: newRemaining,
-          status: isLunas ? 'Lunas' : 'Dicairkan (Dalam Cicilan)',
-          paymentHistory: newHistory
-        };
-      }
-      return k;
-    }));
-    showToast(`Pembayaran potongan kasbon Rp ${payNum.toLocaleString('id-ID')} berhasil dicatat.`, 'success');
-  };
-
-  const exportToCsv = (rows, filename = 'pms_report.csv') => {
-    if (!rows || !rows.length) {
-      showToast('Tidak ada data untuk diekspor.', 'warning');
-      return;
-    }
-    const headers = Object.keys(rows[0]);
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row => headers.map(h => `"${String(row[h] || '').replace(/"/g, '""')}"`).join(','))
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', filename);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    showToast(`File ${filename} berhasil diunduh.`, 'success');
-  };
 
   return (
     <PMSContext.Provider
@@ -3289,8 +2713,6 @@ export const PMSProvider = ({ children }) => {
         allAudits: audits,
         auditFindings: filteredAuditFindings,
         allAuditFindings: auditFindings,
-        ISM_DOC_ELEMENTS,
-        ISM_SMC_ELEMENTS,
         notificationSettings,
         notificationLogs,
         users,
@@ -3354,6 +2776,8 @@ export const PMSProvider = ({ children }) => {
         allExpiringItems,
         openNCCount,
         closedNCCount,
+        smcOpenNCCount,
+        docOpenNCCount,
 
         // Actions
         updateRunningHours,
@@ -3460,20 +2884,11 @@ export const PMSProvider = ({ children }) => {
         closeAuditFinding,
         reopenAuditFinding,
 
-        // Attendance & Kasbon (v2 integrations)
-        attendance: filteredAttendance,
-        allAttendance: attendance,
-        addAttendanceRecord,
-        kasbon: filteredKasbon,
-        allKasbon: kasbon,
-        addKasbonRequest,
-        approveKasbonCaptain,
-        approveKasbonFinance,
-        disburseKasbon,
-        recordKasbonPayment,
-        exportToCsv,
-        ships: vessels,
-        selectedShip: selectedVesselId
+        // Audit Masters
+        ISM_DOC_ELEMENTS,
+        BKI_SMC_CHECKLIST_TEMPLATE,
+        ISM_SMC_ELEMENTS,
+        EXTERNAL_AUDIT_ORGANIZATIONS
       }}
     >
       {children}
@@ -3486,7 +2901,3 @@ export const usePMS = () => {
   if (!context) throw new Error('usePMS must be used within a PMSProvider');
   return context;
 };
-
-export const useApp = usePMS;
-export { PMSContext };
-export default PMSContext;

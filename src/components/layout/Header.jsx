@@ -30,8 +30,7 @@ export const Header = () => {
     theme,
     toggleTheme,
     toggleMobileSidebar,
-    isMobileSidebarOpen,
-    siteConfig
+    isMobileSidebarOpen
   } = usePMS();
 
   const [showMobileSearch, setShowMobileSearch] = useState(false);
@@ -84,8 +83,8 @@ export const Header = () => {
           <div className="header-brand-box">
             <MaritimeEmblem size={24} />
             <div className="header-brand-text-wrapper">
-              <span className="header-brand-title">{siteConfig?.companyName || 'ARMADA'}</span>
-              <span className="header-brand-subtitle">PMS</span>
+              <span className="header-brand-title">PMS</span>
+              <span className="header-brand-subtitle">ARMADA</span>
             </div>
           </div>
 

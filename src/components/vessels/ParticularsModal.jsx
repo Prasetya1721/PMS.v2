@@ -321,7 +321,7 @@ export const ParticularsModal = ({ vessel, isOpen, onClose, onSave }) => {
                 {formData.lastUpdated ? (
                   <span>Terakhir diperbarui: {new Date(formData.lastUpdated).toLocaleString('id-ID')}</span>
                 ) : (
-                  <span>Spesifikasi teknis resmi standar Klasifikasi & Armada</span>
+                  <span>Spesifikasi teknis resmi standar BKI & ISM Code</span>
                 )}
               </div>
 

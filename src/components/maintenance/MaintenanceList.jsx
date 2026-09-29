@@ -400,7 +400,7 @@ export const MaintenanceList = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div className="glass-card" style={{ padding: '0.85rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
             <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-              Surat Permintaan Barang Kapal (SPBK) ke Gudang Logistik Darat Armada
+              Surat Permintaan Barang Kapal (SPBK) ke Gudang Logistik Darat Pontianak
             </span>
 
             <div style={{ position: 'relative', width: '280px' }}>

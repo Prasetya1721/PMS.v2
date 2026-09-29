@@ -149,7 +149,51 @@ export const MaritimeLogo = ({
   );
 };
 
+/**
+ * Official Report Header Logo for Official Documents & Print Reports
+ * Tailored for official print documents, audit headers, and certificates.
+ */
+export const MaritimeReportLogo = ({ emblemSize = 34, className = '', style = {} }) => {
+  return (
+    <div
+      className={`maritime-report-logo ${className}`}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '8px',
+        lineHeight: 1,
+        userSelect: 'none',
+        ...style
+      }}
+    >
+      <MaritimeEmblem size={emblemSize} />
+      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', textAlign: 'left' }}>
+        <span style={{ fontSize: '6.5pt', fontWeight: 700, color: '#334155', letterSpacing: '0.4px', lineHeight: 1.15, fontFamily: "'Segoe UI', Arial, sans-serif" }}>
+          SISTEM MANAJEMEN
+        </span>
+        <span
+          style={{
+            fontSize: '8.5pt',
+            fontWeight: 900,
+            color: '#0284c7',
+            letterSpacing: '0.4px',
+            lineHeight: 1.15,
+            fontFamily: "'Inter', Arial, sans-serif"
+          }}
+        >
+          PMS ARMADA
+        </span>
+        <span style={{ fontSize: '6pt', fontWeight: 800, color: '#0369a1', letterSpacing: '0.8px', lineHeight: 1.15, fontFamily: "'Segoe UI', Arial, sans-serif" }}>
+          MARITIM
+        </span>
+      </div>
+    </div>
+  );
+};
+
 // Aliases
 export const BrandEmblem = MaritimeEmblem;
 export const BrandLogo = MaritimeLogo;
+export const ReportLogo = MaritimeReportLogo;
 export default MaritimeLogo;
+

@@ -1,4 +1,4 @@
-// Ship Particulars Generator & Definitions - Sistem Planned Maintenance System (PMS)
+// Ship Particulars Generator & Definitions
 // Comprehensive maritime technical specifications for Tugboats (Kapal Tunda) and Barges (Tongkang)
 
 export const createDefaultShipParticulars = (vessel = {}) => {
@@ -15,7 +15,7 @@ export const createDefaultShipParticulars = (vessel = {}) => {
   const name = String(vessel.name || 'Kapal Niaga').trim();
   const yearBuilt = Number(vessel.yearBuilt) || new Date().getFullYear();
   const builder = vessel.builder || 'PT Galangan Kapal Nusantara';
-  const port = vessel.portOfRegistry || 'Pelabuhan Pendaftaran Armada';
+  const port = vessel.portOfRegistry || 'Pontianak, Kalimantan Barat';
   const flag = vessel.flag || 'Indonesia (IDN)';
   const cleanReg = regNo !== '-' ? regNo.replace(/[^A-Za-z0-9]/g, '') : '';
   const cleanDigits = regNo !== '-' ? regNo.replace(/[^0-9]/g, '') : '';
@@ -74,8 +74,8 @@ export const createDefaultShipParticulars = (vessel = {}) => {
       keelLaidDate: `${yearBuilt - 1}-06-15`,
       launchingDate: `${yearBuilt - 1}-12-10`,
       deliveryDate: `${yearBuilt}-03-20`,
-      ownerCompany: vessel.owner || 'PT. Operator Armada Maritim',
-      operatorCompany: isOperator ? (vessel.operator || 'PT. Operator Armada Maritim (Charter / Operator)') : (vessel.operator || 'PT. Operator Armada Maritim'),
+      ownerCompany: 'Perusahaan Pelayaran (Owner)',
+      operatorCompany: isOperator ? 'Perusahaan Pelayaran (Charter / Operator)' : 'Perusahaan Pelayaran',
       ownershipStatus: isOperator ? 'As Operator' : 'As Owner',
 
       // 2. Dimensi Utama & Tonase
@@ -194,8 +194,8 @@ export const createDefaultShipParticulars = (vessel = {}) => {
     keelLaidDate: `${yearBuilt - 1}-04-10`,
     launchingDate: `${yearBuilt - 1}-10-25`,
     deliveryDate: `${yearBuilt}-02-18`,
-    ownerCompany: vessel.owner || 'PT. Operator Armada Maritim',
-    operatorCompany: isOperator ? (vessel.operator || 'PT. Operator Armada Maritim (Charter / Operator)') : (vessel.operator || 'PT. Operator Armada Maritim'),
+    ownerCompany: 'Perusahaan Pelayaran (Owner)',
+    operatorCompany: isOperator ? 'Perusahaan Pelayaran (Charter / Operator)' : 'Perusahaan Pelayaran',
     ownershipStatus: isOperator ? 'As Operator' : 'As Owner',
 
     // 2. Dimensi Utama & Tonase

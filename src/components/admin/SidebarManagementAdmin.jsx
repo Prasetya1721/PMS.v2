@@ -112,7 +112,7 @@ export const SidebarManagementAdmin = () => {
               Manajemen Hak Akses Sidebar (Role-Based Matrix)
             </h1>
             <p style={{ fontSize: '0.825rem', color: '#64748b', margin: '0.2rem 0 0 0' }}>
-              Atur menu navigasi apa saja yang dapat dilihat oleh setiap jabatan operasional kapal dan kantor perusahaan.
+              Atur menu navigasi apa saja yang dapat dilihat oleh setiap jabatan operasional kapal dan manajemen kantor.
             </p>
           </div>
         </div>
